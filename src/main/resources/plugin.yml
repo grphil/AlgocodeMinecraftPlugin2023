@@ -1,0 +1,17 @@
+name: Exam2022
+version: 1.0
+main: ru.algocode.exam2022.Exam2022
+api-version: 1.18
+commands:
+  addspawn:
+    description: Добавляет спаун
+    usage: /addspawn
+  resetchests:
+    description: Обновляет сундуки
+    usage: /resetchests
+  syncconfig:
+    description: Синхронизирует конфигурацию
+    usage: /syncconfig
+  problemstatus:
+    description: Получает статус по задачам
+    usage: /problemstatus
