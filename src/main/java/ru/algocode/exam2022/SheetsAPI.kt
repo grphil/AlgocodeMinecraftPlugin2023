@@ -1,74 +1,69 @@
-package ru.algocode.exam2022;
+@file:Suppress("DEPRECATION")
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.SheetsScopes;
-import com.google.api.services.sheets.v4.model.ValueRange;
+package ru.algocode.exam2022
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.GeneralSecurityException;
-import java.util.Collections;
-import java.util.List;
+import com.google.api.client.auth.oauth2.Credential
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.JsonFactory
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.sheets.v4.Sheets
+import com.google.api.services.sheets.v4.SheetsScopes
+import com.google.api.services.sheets.v4.model.ValueRange
+import org.bukkit.plugin.Plugin
+import java.io.File
+import java.io.IOException
+import java.security.GeneralSecurityException
 
-class SheetsAPI {
-
-    private Credential getCredential() {
-        InputStream is = SheetsAPI.class
-                .getResourceAsStream("/google_service_account.json");
-        try {
-            return GoogleCredential.fromStream(is)
-                    .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS));
-        } catch (IOException e) {
-            e.printStackTrace();
+class SheetsAPI(private val spreadsheetId: String, val plugin: Plugin) {
+    private val credential: Credential?
+        get() {
+            val inputStream = File(plugin.dataFolder, "google_service_account.json").inputStream()
+            try {
+                return GoogleCredential.fromStream(inputStream)
+                    .createScoped(setOf(SheetsScopes.SPREADSHEETS))
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+            return null
         }
-        return null;
+    private val service: Sheets
+
+    init {
+        var HTTP_TRANSPORT: NetHttpTransport? = null
+        try {
+            HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport()
+        } catch (e: GeneralSecurityException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        val JSON_FACTORY: JsonFactory = GsonFactory.getDefaultInstance()
+        service = Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+            .setApplicationName("algocodemcplugin")
+            .build()
     }
 
-    private String spreadsheetId;
-    private Sheets service;
-
-    SheetsAPI(String spreadsheetId) {
-        this.spreadsheetId = spreadsheetId;
-        NetHttpTransport HTTP_TRANSPORT = null;
-        try {
-            HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-        this.service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredential())
-                .setApplicationName("Algocode")
-                .build();
-    }
-
-    List<List<Object>> get(String range) {
-        try {
-            ValueRange response = this.service.spreadsheets().values().get(this.spreadsheetId, range).execute();
-            return response.getValues();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+    operator fun get(range: String?): List<List<Any>>? {
+        return try {
+            val response = service.spreadsheets().values()[spreadsheetId, range].execute()
+            response.getValues()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            null
         }
     }
 
-    void update(String range, List<List<Object>> values) {
+    fun update(range: String?, values: List<List<Any?>?>?) {
         try {
-            ValueRange data = new ValueRange();
-            data.setValues(values);
-            this.service.spreadsheets().values().update(this.spreadsheetId, range, data)
-                    .setValueInputOption("RAW")
-                    .execute();
-        } catch (IOException e) {
-            e.printStackTrace();
+            val data = ValueRange()
+            data.setValues(values)
+            service.spreadsheets().values().update(spreadsheetId, range, data)
+                .setValueInputOption("RAW")
+                .execute()
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 }
-

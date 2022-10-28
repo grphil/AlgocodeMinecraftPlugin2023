@@ -10,11 +10,12 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
 import ru.algocode.ejudge.EjudgeSession
+import java.util.concurrent.ConcurrentHashMap
 
 class GameState internal constructor(private val plugin: JavaPlugin) {
     private val config: Config
     private val playersApi: SheetsAPI
-    private val players: HashMap<String, Stats>
+    private val players: ConcurrentHashMap<String, Stats>
     private var playersCount: Int
     private val scoreboardObjective: Objective
     private var secondsCount: Int
@@ -24,9 +25,9 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         xmlParser = ExternalXmlParser(plugin)
         playersCount = 1
         secondsCount = 0
-        playersApi = SheetsAPI(plugin.config.getString("spreadsheet_id"))
+        playersApi = SheetsAPI(plugin.config.getString("spreadsheet_id")!!, plugin)
         config = Config(plugin)
-        players = HashMap()
+        players = ConcurrentHashMap()
         ReloadConfig()
         try {
             xmlParser.UpdateStandings(config.ExternalXmlPath, players)
@@ -37,9 +38,14 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         tickPlayers()
         val manager = Bukkit.getScoreboardManager()
         val board = manager!!.newScoreboard
-        scoreboardObjective = board.registerNewObjective("score", "dummy")
+        scoreboardObjective =
+            board.registerNewObjective(
+                "score",
+                "dummy",
+                ChatColor.GOLD.toString() +
+                "Таблица результатов",
+            )
         scoreboardObjective.displaySlot = DisplaySlot.SIDEBAR
-        scoreboardObjective.displayName = ChatColor.GOLD.toString() + "Таблица результатов"
     }
 
     fun Tick() {
@@ -86,23 +92,21 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
     }
 
     fun FillChest(inventory: Inventory) {
-        for (item in config.ChestItems) {
-            if (item!!.Generated()) {
+        for (item in config.ChestItems!!) {
+            if (item.Generated()) {
                 val itemStack = item.GenerateItem()
-                if (item != null) {
-                    val pos = Utils.random.nextInt(inventory.size)
-                    inventory.setItem(pos, itemStack)
-                }
+                val pos = Utils.random.nextInt(inventory.size)
+                inventory.setItem(pos, itemStack)
             }
         }
     }
 
     fun OpenMerchant(player: Player?) {
-        config.MerchantMenu.Open(player)
+        config.MerchantMenu!!.Open(player)
     }
 
     fun BuyMerchant(event: InventoryClickEvent) {
-        val itemStack = config.MerchantMenu.OnClick(event) ?: return
+        val itemStack = config.MerchantMenu!!.OnClick(event) ?: return
         val item = itemStack.GenerateItem()
         val meta = item.itemMeta
         meta!!.lore = emptyList()
@@ -128,18 +132,18 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
 
     fun ReloadConfig() {
         val newPlayersCount = config.ReloadConfig()
-        for (row in playersApi["Gamestats!A" + (playersCount + 1) + ":M" + newPlayersCount]) {
+        for (row in playersApi["Gamestats!A" + (playersCount + 1) + ":M" + newPlayersCount]!!) {
             val player = Stats(row)
             players[player.GetLogin()] = player
         }
-        for (row in playersApi["Problems!B" + (playersCount + 1) + ":" + ('B'.code + config.ProblemsCount).toChar() + newPlayersCount]) {
+        for (row in playersApi["Problems!B" + (playersCount + 1) + ":" + ('B'.code + config.ProblemsCount).toChar() + newPlayersCount]!!) {
             val login = row[0] as String
             if (players.containsKey(login)) {
                 players[login]!!.LoadProblems(row.subList(1, row.size))
                 players[login]!!.RecalculateScore(config.StatsMultiplier)
             }
         }
-        for (ejudgeAuth in config.GetSheetsApi()["Users!A" + (playersCount + 1) + ":E" + newPlayersCount]) {
+        for (ejudgeAuth in config.GetSheetsApi()["Users!A" + (playersCount + 1) + ":E" + newPlayersCount]!!) {
             val login = ejudgeAuth[1] as String
             if (players.containsKey(login)) {
                 players[login]!!.AddEjudgeAuth(ejudgeAuth)
@@ -177,18 +181,16 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
     }
 
     private fun spawnItems() {
-        for (item in config.SpawnItems) {
-            if (item!!.Generated()) {
+        for (item in config.SpawnItems!!) {
+            if (item.Generated()) {
                 val itemStack = item.GenerateItem()
-                if (item != null) {
-                    val world = plugin.server.getWorld("world")
-                    val x =
-                        config.SpawnerX + Utils.random.nextInt(config.SpawnerRadius * 2 + 1) - config.SpawnerRadius - 1
-                    val z =
-                        config.SpawnerZ + Utils.random.nextInt(config.SpawnerRadius * 2 + 1) - config.SpawnerRadius - 1
-                    val loc = Location(world, x.toDouble(), config.SpawnerY.toDouble(), z.toDouble())
-                    loc.world!!.dropItemNaturally(loc, itemStack)
-                }
+                val world = plugin.server.getWorld("world")
+                val x =
+                    config.SpawnerX + Utils.random.nextInt(config.SpawnerRadius * 2 + 1) - config.SpawnerRadius - 1
+                val z =
+                    config.SpawnerZ + Utils.random.nextInt(config.SpawnerRadius * 2 + 1) - config.SpawnerRadius - 1
+                val loc = Location(world, x.toDouble(), config.SpawnerY.toDouble(), z.toDouble())
+                loc.world!!.dropItemNaturally(loc, itemStack)
             }
         }
     }
@@ -230,7 +232,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         val gamestats: MutableList<List<Any>> = ArrayList()
         val problems: MutableList<List<Any>> = ArrayList()
         var idx = 0
-        for (row in playersApi["Gamestats!B2:J$playersCount"]) {
+        for (row in playersApi["Gamestats!B2:J$playersCount"]!!) {
             gamestats.add(ArrayList())
             problems.add(ArrayList())
             val login = row[0] as String

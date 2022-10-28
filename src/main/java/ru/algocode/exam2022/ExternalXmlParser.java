@@ -13,17 +13,18 @@ import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ExternalXmlParser {
 
-    private JavaPlugin plugin;
+    private final JavaPlugin plugin;
     private int lastRunId = 0;
 
     ExternalXmlParser(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
-    void UpdateStandings(String externalXmlPath, HashMap<String, Stats> players) throws ParserConfigurationException, IOException, SAXException {
+    void UpdateStandings(String externalXmlPath, ConcurrentHashMap<String, Stats> players) throws ParserConfigurationException, IOException, SAXException {
         Path externalLog;
         try {
             externalLog = Path.of(externalXmlPath);

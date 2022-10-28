@@ -41,7 +41,7 @@ class PlayerEvents(val game: GameState?, val spawnManager: SpawnManager?, val pl
         game!!.Died(killed)
         val killer = killed.killer
         if (killer != null) {
-            game!!.Killed(killer)
+            game.Killed(killer)
         }
     }
 }

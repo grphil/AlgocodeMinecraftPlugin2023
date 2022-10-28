@@ -5,12 +5,12 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-class ParametrizedItemStack {
+public class ParametrizedItemStack {
     private ItemStack item;
 
-    private int param;
+    private final int param;
 
-    private int maxCount;
+    private final int maxCount;
 
     ParametrizedItemStack(ItemStack item, int param, int maxCount) {
         this.item = item;

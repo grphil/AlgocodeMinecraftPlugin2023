@@ -13,11 +13,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Collections;
 
-class ShopMenu implements Listener {
-    private String name;
-    private int size;
-    private ItemStack[] optionItems;
-    private int[] prices;
+public class ShopMenu implements Listener {
+    private final String name;
+    private final int size;
+    private final ItemStack[] optionItems;
+    private final int[] prices;
 
     public ShopMenu(String name, int size) {
         this.name = name;
@@ -30,6 +30,7 @@ class ShopMenu implements Listener {
         this.prices[position] = parametrizedItem.GetParam();
         ItemStack item = parametrizedItem.GenerateItem();
         ItemMeta meta = item.getItemMeta();
+        assert meta != null;
         meta.setLore(Collections.singletonList(ChatColor.GREEN + "Цена: " + parametrizedItem.GetParam()));
         item.setItemMeta(meta);
         this.optionItems[position] = item;
@@ -52,7 +53,7 @@ class ShopMenu implements Listener {
                 return null;
             }
             event.setCancelled(true);
-            if (slot >= 0 && slot < this.size && this.optionItems[slot] != null) {
+            if (slot >= 0 && this.optionItems[slot] != null) {
                 return new ParametrizedItemStack(this.optionItems[slot], this.prices[slot], 1);
             }
         }

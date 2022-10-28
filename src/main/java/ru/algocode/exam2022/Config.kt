@@ -1,165 +1,137 @@
-package ru.algocode.exam2022;
+package ru.algocode.exam2022
 
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.checkerframework.checker.units.qual.A;
+import org.bukkit.inventory.ItemStack
+import org.bukkit.plugin.java.JavaPlugin
 
-import java.util.ArrayList;
-import java.util.List;
+class Config internal constructor(plugin: JavaPlugin) {
+    var ChestItems: MutableList<ParametrizedItemStack>? = null
+    var SpawnItems: MutableList<ParametrizedItemStack>? = null
+    var MerchantMenu: ShopMenu? = null
+    var MaxTimeInForbiddenZone = 0
+    var TimeIncreaseForForbiddenZone = 0
+    var PenaltyForForbiddenZone = 0
+    var ProblemsCount = 0
+    var SpawnerX = 0
+    var SpawnerY = 0
+    var SpawnerZ = 0
+    var SpawnerRadius = 0
+    var TimeUntilNextKill = 0
+    var EjudgeContestId = 0
+    var ExternalXmlPath: String? = null
+    var StatsMultiplier: Stats? = null
+    private val config: SheetsAPI
+    private var merchantItems: MutableList<ParametrizedItemStack>? = null
 
-public class Config {
-    private static final int INVENTORY_ROW = 9;
-
-    public List<ParametrizedItemStack> ChestItems;
-    public List<ParametrizedItemStack> SpawnItems;
-
-    public ShopMenu MerchantMenu;
-
-    public int MaxTimeInForbiddenZone;
-    public int TimeIncreaseForForbiddenZone;
-    public int PenaltyForForbiddenZone;
-    public int ProblemsCount;
-
-    public int SpawnerX;
-    public int SpawnerY;
-    public int SpawnerZ;
-    public int SpawnerRadius;
-    public int TimeUntilNextKill;
-
-    public int EjudgeContestId;
-    public String ExternalXmlPath;
-
-    public Stats StatsMultiplier;
-
-
-    private SheetsAPI config;
-
-    private List<ParametrizedItemStack> merchantItems;
-
-    Config(JavaPlugin plugin) {
-        config = new SheetsAPI(plugin.getConfig().getString("config_table_id"));
+    init {
+        config = SheetsAPI(plugin.config.getString("config_table_id")!!, plugin)
     }
 
-    int ReloadConfig() {
-        List<List<Object>> conf = config.get("Gameconfig!B1:B15");
-        int newPlayersCount = Integer.parseInt((String) conf.get(0).get(0));
-
-        int problemsLastRow = Integer.parseInt((String) conf.get(1).get(0));
-        int potionsLastRow = Integer.parseInt((String) conf.get(2).get(0));
-        int itemsLastRow = Integer.parseInt((String) conf.get(3).get(0));
-
-        ProblemsCount = Integer.parseInt((String) conf.get(4).get(0));
-        MaxTimeInForbiddenZone = Integer.parseInt((String) conf.get(5).get(0));
-        TimeIncreaseForForbiddenZone = Integer.parseInt((String) conf.get(6).get(0));
-        PenaltyForForbiddenZone = Integer.parseInt((String) conf.get(7).get(0));
-        SpawnerX = Integer.parseInt((String) conf.get(8).get(0));
-        SpawnerY = Integer.parseInt((String) conf.get(9).get(0));
-        SpawnerZ = Integer.parseInt((String) conf.get(10).get(0));
-        SpawnerRadius = Integer.parseInt((String) conf.get(11).get(0));
-        TimeUntilNextKill = Integer.parseInt((String) conf.get(12).get(0));
-        EjudgeContestId = Integer.parseInt((String) conf.get(13).get(0));
-        ExternalXmlPath = (String) conf.get(14).get(0);
-
-        List<List<Object>> multipliers = config.get("Score!A2:M2");
-
-        StatsMultiplier = new Stats(multipliers.get(0));
-
-        ChestItems = new ArrayList<>();
-        merchantItems = new ArrayList<>();
-        SpawnItems = new ArrayList<>();
-
-        List<List<Object>> potions = config.get("Potions!A2:F" + potionsLastRow);
-        for (List<Object> row : potions) {
-            String potionName = (String) row.get(0);
-            int potionTime = Integer.parseInt((String) row.get(1));
-            int potionAmplifier = Integer.parseInt((String) row.get(2));
-            int potionChest = Integer.parseInt((String) row.get(3));
-            int potionPrice = Integer.parseInt((String) row.get(4));
-            int potionSpawn = Integer.parseInt((String) row.get(5));
-
-            ItemStack potion = ItemUtils.CreatePotion(potionName, potionTime, potionAmplifier);
+    fun ReloadConfig(): Int {
+        val conf = config["Gameconfig!B1:B15"]
+        val newPlayersCount: Int = (conf!![0][0] as String?)!!.toInt()
+        val problemsLastRow: Int = (conf[1][0] as String?)!!.toInt()
+        val potionsLastRow: Int = (conf[2][0] as String?)!!.toInt()
+        val itemsLastRow: Int = (conf[3][0] as String?)!!.toInt()
+        ProblemsCount = (conf[4][0] as String?)!!.toInt()
+        MaxTimeInForbiddenZone = (conf[5][0] as String?)!!.toInt()
+        TimeIncreaseForForbiddenZone = (conf[6][0] as String?)!!.toInt()
+        PenaltyForForbiddenZone = (conf[7][0] as String?)!!.toInt()
+        SpawnerX = (conf[8][0] as String?)!!.toInt()
+        SpawnerY = (conf[9][0] as String?)!!.toInt()
+        SpawnerZ = (conf[10][0] as String?)!!.toInt()
+        SpawnerRadius = (conf[11][0] as String?)!!.toInt()
+        TimeUntilNextKill = (conf[12][0] as String?)!!.toInt()
+        EjudgeContestId = (conf[13][0] as String?)!!.toInt()
+        ExternalXmlPath = (conf[14][0] as String)
+        val multipliers = config["Score!A2:M2"]
+        StatsMultiplier = Stats(multipliers!![0])
+        ChestItems = ArrayList()
+        merchantItems = ArrayList()
+        SpawnItems = ArrayList()
+        val potions = config["Potions!A2:F$potionsLastRow"]
+        for (row in potions!!) {
+            val potionName = (row[0] as String)
+            val potionTime: Int = (row[1] as String?)!!.toInt()
+            val potionAmplifier: Int = (row[2] as String?)!!.toInt()
+            val potionChest: Int = (row[3] as String?)!!.toInt()
+            val potionPrice: Int = (row[4] as String?)!!.toInt()
+            val potionSpawn: Int = (row[5] as String?)!!.toInt()
+            val potion = ItemUtils.CreatePotion(potionName, potionTime, potionAmplifier)
             if (potion == null) {
-                System.out.println("No potion named " + potionName);
-                continue;
+                println("No potion named $potionName")
+                continue
             }
-            addItem(potion, potionChest, potionPrice, potionSpawn, 1);
-
+            addItem(potion, potionChest, potionPrice, potionSpawn, 1)
         }
-
-        List<List<Object>> items = config.get("Items!A2:E" + itemsLastRow);
-        for (List<Object> row : items) {
-            String itemName = (String) row.get(0);
-            int itemChest = Integer.parseInt((String) row.get(1));
-            int itemCount = Integer.parseInt((String) row.get(2));
-            int itemPrice = Integer.parseInt((String) row.get(3));
-            int itemSpawn = Integer.parseInt((String) row.get(4));
-
-            ItemStack item = ItemUtils.CreateItem(itemName);
+        val items = config["Items!A2:E$itemsLastRow"]
+        for (row in items!!) {
+            val itemName = (row[0] as String)
+            val itemChest: Int = (row[1] as String?)!!.toInt()
+            val itemCount: Int = (row[2] as String?)!!.toInt()
+            val itemPrice: Int = (row[3] as String?)!!.toInt()
+            val itemSpawn: Int = (row[4] as String?)!!.toInt()
+            val item = ItemUtils.CreateItem(itemName)
             if (item == null) {
-                System.out.println("No item named " + itemName);
-                continue;
+                println("No item named $itemName")
+                continue
             }
-
-            addItem(item, itemChest, itemPrice, itemSpawn, itemCount);
+            addItem(item, itemChest, itemPrice, itemSpawn, itemCount)
         }
-
-        List<List<Object>> problems = config.get("Problems!A2:K" + problemsLastRow);
-        for (List<Object> row : problems) {
-            String problemLabel = (String) row.get(0);
-            int problemChest = Integer.parseInt((String) row.get(1));
-            int problemPrice = Integer.parseInt((String) row.get(2));
-            int problemSpawn = Integer.parseInt((String) row.get(3));
-
-            String problemStatement = (String) row.get(4);
-            String problemInput = (String) row.get(5);
-            String problemOutput = (String) row.get(6);
-            String problemSample1Input = (String) row.get(7);
-            String problemSample1Output = (String) row.get(8);
-            String problemSample2Input = "";
-            String problemSample2Output = "";
-            if (row.size() > 9) {
-                problemSample2Input = (String) row.get(9);
-                problemSample2Output = (String) row.get(10);
+        val problems: List<List<Any?>>? = config["Problems!A2:K$problemsLastRow"]
+        for (row in problems!!) {
+            val problemLabel = (row[0] as String?)!!
+            val problemChest: Int = (row[1] as String?)!!.toInt()
+            val problemPrice: Int = (row[2] as String?)!!.toInt()
+            val problemSpawn: Int = (row[3] as String?)!!.toInt()
+            val problemStatement = (row[4] as String?)!!
+            val problemInput = (row[5] as String?)!!
+            val problemOutput = (row[6] as String?)!!
+            val problemSample1Input = (row[7] as String?)!!
+            val problemSample1Output = (row[8] as String?)!!
+            var problemSample2Input: String? = ""
+            var problemSample2Output: String? = ""
+            if (row.size > 9) {
+                problemSample2Input = (row[9] as String?)!!
+                problemSample2Output = (row[10] as String?)!!
             }
-
-            ItemStack book = ItemUtils.CreateProblemBook(
-                    problemLabel,
-                    problemStatement,
-                    problemInput,
-                    problemOutput,
-                    problemSample1Input,
-                    problemSample1Output,
-                    problemSample2Input,
-                    problemSample2Output
-            );
-            addItem(book, problemChest, problemPrice, problemSpawn, 1);
+            val book = ItemUtils.CreateProblemBook(
+                problemLabel,
+                problemStatement,
+                problemInput,
+                problemOutput,
+                problemSample1Input,
+                problemSample1Output,
+                problemSample2Input,
+                problemSample2Output
+            )
+            addItem(book, problemChest, problemPrice, problemSpawn, 1)
         }
-
-        int needSize = (merchantItems.size() + INVENTORY_ROW - 1) / INVENTORY_ROW * INVENTORY_ROW;
-        MerchantMenu = new ShopMenu("Торговец", needSize);
-        int curPos = 0;
-        for (ParametrizedItemStack item : merchantItems) {
-            MerchantMenu.setOption(curPos++, item);
+        val needSize = (merchantItems!!.size + INVENTORY_ROW - 1) / INVENTORY_ROW * INVENTORY_ROW
+        MerchantMenu = ShopMenu("Торговец", needSize)
+        var curPos = 0
+        for (item in merchantItems!!) {
+            MerchantMenu!!.setOption(curPos++, item)
         }
-
-        return newPlayersCount;
+        return newPlayersCount
     }
 
-    SheetsAPI GetSheetsApi() {
-        return config;
+    fun GetSheetsApi(): SheetsAPI {
+        return config
     }
 
-    private void addItem(ItemStack item, int chest, int price, int spawn, int count) {
+    private fun addItem(item: ItemStack, chest: Int, price: Int, spawn: Int, count: Int) {
         if (chest > 0) {
-            ChestItems.add(new ParametrizedItemStack(item.clone(), chest, count));
+            ChestItems!!.add(ParametrizedItemStack(item.clone(), chest, count))
         }
-
         if (price > 0) {
-            merchantItems.add(new ParametrizedItemStack(item.clone(), price, count));
+            merchantItems!!.add(ParametrizedItemStack(item.clone(), price, count))
         }
-
         if (spawn > 0) {
-            SpawnItems.add(new ParametrizedItemStack(item.clone(), spawn, count));
+            SpawnItems!!.add(ParametrizedItemStack(item.clone(), spawn, count))
         }
+    }
+
+    companion object {
+        private const val INVENTORY_ROW = 9
     }
 }

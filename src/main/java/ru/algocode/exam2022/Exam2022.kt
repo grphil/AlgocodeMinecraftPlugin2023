@@ -13,7 +13,6 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntitySpawnEvent
-import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.player.*
@@ -27,19 +26,21 @@ class Exam2022 : JavaPlugin(), Listener {
     private var updatedChests: HashSet<Location?>? = null
     private fun initConfig() {
         config
-        config.addDefault("spreadsheet_id", "???")
-        config.addDefault("config_table_id", "???")
+        config.getString("spreadsheet_id")!!
+        config.getString("config_table_id")!!
         config.options().copyDefaults(true)
         saveConfig()
     }
 
-    private val eventHadlers = listOf<Listener>(
-        PlayerEvents(game, spawnManager, this)
-    )
+    private lateinit var eventHandlers: List<Listener>
 
     override fun onEnable() {
         initConfig()
         game = GameState(this)
+        eventHandlers = listOf<Listener>(
+            PlayerEvents(game, spawnManager, this),
+            this,
+        )
         for (player in server.onlinePlayers) {
             game!!.InitPlayer(player)
         }
@@ -50,7 +51,6 @@ class Exam2022 : JavaPlugin(), Listener {
         }.runTaskTimer(this, 20, 20)
         spawnManager = SpawnManager(this)
         updatedChests = HashSet()
-//        server.pluginManager.registerEvents(this, this)
         registerEventHandlers()
         getCommand("addspawn")!!.setExecutor(SpawnCommand(spawnManager))
         getCommand("resetchests")!!.setExecutor(ResetChestsCommand(this))
@@ -59,7 +59,7 @@ class Exam2022 : JavaPlugin(), Listener {
     }
 
     private fun registerEventHandlers() {
-        eventHadlers.forEach { listener ->
+        eventHandlers.forEach { listener ->
             server.pluginManager.registerEvents(listener, this)
         }
     }
