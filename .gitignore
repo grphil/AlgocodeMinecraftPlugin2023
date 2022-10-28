@@ -119,3 +119,5 @@ run/
 !gradle-wrapper.jar
 
 src/main/resources/google_service_account.json
+
+.env
