@@ -1,54 +1,50 @@
-package ru.algocode.exam2022;
+package ru.algocode.exam2022
 
-import org.bukkit.Location;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.Location
+import org.bukkit.plugin.java.JavaPlugin
+import java.util.*
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+class SpawnManager internal constructor(private val plugin: JavaPlugin) {
+    var spawns: MutableList<Location?>? = null
+    private var pointer = 0
+    var team: String? = null
 
-class SpawnManager {
-    private JavaPlugin plugin;
-    List<Location> spawns;
-    private int pointer;
-    String team;
-
-    SpawnManager(JavaPlugin plugin) {
-        this.plugin = plugin;
-        this.initializeSpawns();
+    init {
+        initializeSpawns()
     }
 
-    private void initializeSpawns() {
-        this.spawns = new ArrayList<>();
-        for (String loc : this.plugin.getConfig().getStringList("spawns")) {
-            String[] parts = loc.split(":");
-            String world = parts[0];
-            int x = Integer.parseInt(parts[1]);
-            int y = Integer.parseInt(parts[2]);
-            int z = Integer.parseInt(parts[3]);
-            this.spawns.add(new Location(this.plugin.getServer().getWorld(world), x, y, z));
+    private fun initializeSpawns() {
+        spawns = ArrayList()
+        for (loc in plugin.config.getStringList("spawns")) {
+            val parts = loc.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            val world = parts[0]
+            val x = parts[1].toInt()
+            val y = parts[2].toInt()
+            val z = parts[3].toInt()
+            spawns!!.add(Location(plugin.server.getWorld(world), x.toDouble(), y.toDouble(), z.toDouble()))
         }
-        Collections.shuffle(this.spawns);
-        this.pointer = 0;
+        Collections.shuffle(spawns)
+        pointer = 0
     }
 
-    int addSpawn(Location l) {
-        String loc = l.getWorld().getName() + ":" + l.getBlockX() + ":" + l.getBlockY() + ":" + l.getBlockZ();
-        List<String> cur = this.plugin.getConfig().getStringList("spawns");
-        cur.add(loc);
-        this.plugin.getConfig().set("spawns", cur);
-        this.plugin.saveConfig();
-        this.initializeSpawns();
-        return this.spawns.size();
+    fun addSpawn(l: Location): Int {
+        val loc = l.world!!.name + ":" + l.blockX + ":" + l.blockY + ":" + l.blockZ
+        val cur = plugin.config.getStringList("spawns")
+        cur.add(loc)
+        plugin.config["spawns"] = cur
+        plugin.saveConfig()
+        initializeSpawns()
+        return spawns!!.size
     }
 
-    Location getRandomSpawnLocation() {
-        if (this.spawns.isEmpty()) {
-            return this.plugin.getServer().getWorlds().get(0).getSpawnLocation();
+    val randomSpawnLocation: Location?
+        get() {
+            if (spawns!!.isEmpty()) {
+                return plugin.server.worlds[0].spawnLocation
+            }
+            if (pointer >= spawns!!.size) {
+                pointer = 0
+            }
+            return spawns!![pointer++]
         }
-        if (this.pointer >= this.spawns.size()) {
-            this.pointer = 0;
-        }
-        return this.spawns.get(this.pointer++);
-    }
 }

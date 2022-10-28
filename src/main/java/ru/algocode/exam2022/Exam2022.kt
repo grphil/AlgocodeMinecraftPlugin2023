@@ -1,217 +1,175 @@
-package ru.algocode.exam2022;
+package ru.algocode.exam2022
 
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.Chest;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.player.*;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.ChatColor
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.block.Chest
+import org.bukkit.entity.EntityType
+import org.bukkit.entity.Player
+import org.bukkit.entity.Villager
+import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
+import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
+import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.entity.EntitySpawnEvent
+import org.bukkit.event.entity.PlayerDeathEvent
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryOpenEvent
+import org.bukkit.event.player.*
+import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.scheduler.BukkitRunnable
+import ru.algocode.exam2022.EventHandlers.PlayerEvents
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-
-public final class Exam2022 extends JavaPlugin implements Listener {
-
-    private GameState game;
-    private SpawnManager spawnManager;
-    private HashSet<Location> updatedChests;
-
-    private void initConfig() {
-        getConfig();
-        getConfig().addDefault("spreadsheet_id", "???");
-        getConfig().addDefault("config_table_id", "???");
-        getConfig().options().copyDefaults(true);
-        saveConfig();
+class Exam2022 : JavaPlugin(), Listener {
+    private var game: GameState? = null
+    private var spawnManager: SpawnManager? = null
+    private var updatedChests: HashSet<Location?>? = null
+    private fun initConfig() {
+        config
+        config.addDefault("spreadsheet_id", "???")
+        config.addDefault("config_table_id", "???")
+        config.options().copyDefaults(true)
+        saveConfig()
     }
 
-    @Override
-    public void onEnable() {
-        initConfig();
-        game = new GameState(this);
+    private val eventHadlers = listOf<Listener>(
+        PlayerEvents(game, spawnManager, this)
+    )
 
-        for (Player player : getServer().getOnlinePlayers()) {
-            game.InitPlayer(player);
+    override fun onEnable() {
+        initConfig()
+        game = GameState(this)
+        for (player in server.onlinePlayers) {
+            game!!.InitPlayer(player)
         }
-
-        (new BukkitRunnable() {
-            @Override
-            public void run() {
-                game.Tick();
+        object : BukkitRunnable() {
+            override fun run() {
+                game!!.Tick()
             }
-        }).runTaskTimer(this, 20, 20);
-
-        spawnManager = new SpawnManager(this);
-        updatedChests = new HashSet<>();
-
-        getServer().getPluginManager().registerEvents(this, this);
-        getCommand("addspawn").setExecutor(new SpawnCommand(spawnManager));
-        getCommand("resetchests").setExecutor(new ResetChestsCommand(this));
-        getCommand("syncconfig").setExecutor(new ReloadConfigCommand(this));
-        getCommand("problemstatus").setExecutor(new EjudgeStatusCommand(this));
+        }.runTaskTimer(this, 20, 20)
+        spawnManager = SpawnManager(this)
+        updatedChests = HashSet()
+//        server.pluginManager.registerEvents(this, this)
+        registerEventHandlers()
+        getCommand("addspawn")!!.setExecutor(SpawnCommand(spawnManager))
+        getCommand("resetchests")!!.setExecutor(ResetChestsCommand(this))
+        getCommand("syncconfig")!!.setExecutor(ReloadConfigCommand(this))
+        getCommand("problemstatus")!!.setExecutor(EjudgeStatusCommand(this))
     }
 
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        game.InitPlayer(player);
-        event.setJoinMessage(player.getDisplayName() + ChatColor.RESET + " присоединился!");
-        player.sendMessage(ChatColor.GOLD + "Добро пожаловать на наш сервер экзамена");
-
-        if (!player.hasPlayedBefore()) {
-            Location loc = spawnManager.getRandomSpawnLocation();
-            loc.getChunk().load();
-            (new BukkitRunnable() {
-                @Override
-                public void run() {
-                    player.teleport(loc);
-                }
-            }).runTaskLater(this, 1);
+    private fun registerEventHandlers() {
+        eventHadlers.forEach { listener ->
+            server.pluginManager.registerEvents(listener, this)
         }
     }
 
+
+
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
-        event.setQuitMessage(player.getDisplayName() + " вышел!");
+    fun onBlockPlace(event: BlockPlaceEvent) {
+        val block = event.blockPlaced
+        val player = event.player
+        if (block.type == Material.CHEST && player.isOp) {
+            val chestInventory = (block.state as Chest).blockInventory
+            game!!.FillChest(chestInventory)
+        }
+        updatedChests!!.add(block.location)
     }
 
     @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent event) {
-        Player killed = event.getEntity();
-        game.Died(killed);
-        Player killer = killed.getKiller();
-        if (killer != null) {
-            game.Killed(killer);
+    fun onPlayerInteract(event: PlayerInteractEvent) {
+        if (event.action != Action.RIGHT_CLICK_AIR && event.action != Action.RIGHT_CLICK_BLOCK) {
+            return
         }
-    }
-
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        Block block = event.getBlockPlaced();
-        Player player = event.getPlayer();
-        if (block.getType() == Material.CHEST && player.isOp()) {
-            Inventory chestInventory = ((Chest) block.getState()).getBlockInventory();
-            game.FillChest(chestInventory);
+        val player = event.player
+        val item = event.item
+        if (item == null || item.type != Material.BLAZE_ROD) {
+            return
         }
-        updatedChests.add(block.getLocation());
-    }
-
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
-            return;
-        }
-        Player player = event.getPlayer();
-        ItemStack item = event.getItem();
-        if (item == null || item.getType() != Material.BLAZE_ROD) {
-            return;
-        }
-
-        item.setAmount(item.getAmount() - 1);
-        player.sendMessage(ChatColor.RED + "Данные об игроках:");
-
-        for (Player online : getServer().getOnlinePlayers()) {
-            if (player == online || online.isOp()) {
-                continue;
+        item.amount = item.amount - 1
+        player.sendMessage(ChatColor.RED.toString() + "Данные об игроках:")
+        for (online in server.onlinePlayers) {
+            if (player === online || online.isOp) {
+                continue
             }
-            String message = online.getName() +
-                    ": X=" + online.getLocation().getBlockX() +
-                    ", Y=" + online.getLocation().getBlockY() +
-                    ", Z=" + online.getLocation().getBlockZ();
-            player.sendMessage(message);
+            val message = online.name +
+                    ": X=" + online.location.blockX +
+                    ", Y=" + online.location.blockY +
+                    ", Z=" + online.location.blockZ
+            player.sendMessage(message)
         }
     }
 
     @EventHandler
-    public void onInventoryOpenEvent(InventoryOpenEvent e){
-        if (e.getInventory().getHolder() instanceof Chest) {
-            Location loc = e.getInventory().getLocation();
-            if (updatedChests.contains(loc)) {
-                return;
+    fun onInventoryOpenEvent(e: InventoryOpenEvent) {
+        if (e.inventory.holder is Chest) {
+            val loc = e.inventory.location
+            if (updatedChests!!.contains(loc)) {
+                return
             }
-            updatedChests.add(loc);
-            e.getInventory().clear();
-            game.FillChest(e.getInventory());
+            updatedChests!!.add(loc)
+            e.inventory.clear()
+            game!!.FillChest(e.inventory)
         }
     }
 
     @EventHandler
-    public void onEntitySpawn(EntitySpawnEvent event) {
-        if (event.getEntityType() == EntityType.VILLAGER) {
-            Villager villager = (Villager) event.getEntity();
-            villager.setInvulnerable(true);
-            villager.setAI(false);
-            villager.setCustomName(ChatColor.GREEN + "Торговец");
-            villager.setCustomNameVisible(true);
+    fun onEntitySpawn(event: EntitySpawnEvent) {
+        if (event.entityType == EntityType.VILLAGER) {
+            val villager = event.entity as Villager
+            villager.isInvulnerable = true
+            villager.setAI(false)
+            villager.customName = ChatColor.GREEN.toString() + "Торговец"
+            villager.isCustomNameVisible = true
         }
-    }
-    
-    @EventHandler
-    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        if (event.getRightClicked().getType() != EntityType.VILLAGER) {
-            return;
-        }
-        event.setCancelled(true);
-        Player player = event.getPlayer();
-        game.OpenMerchant(player);
     }
 
     @EventHandler
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-        event.setRespawnLocation(spawnManager.getRandomSpawnLocation());
-    }
-
-    @EventHandler(priority= EventPriority.MONITOR)
-    void onInventoryClick(InventoryClickEvent event) {
-        game.BuyMerchant(event);
+    fun onPlayerInteractEntity(event: PlayerInteractEntityEvent) {
+        if (event.rightClicked.type != EntityType.VILLAGER) {
+            return
+        }
+        event.isCancelled = true
+        val player = event.player
+        game!!.OpenMerchant(player)
     }
 
     @EventHandler
-    public void onPlayerEditBook(PlayerEditBookEvent event) {
-        if (!event.isSigning()) {
-            return;
-        }
-        event.setCancelled(true);
-        Player player = event.getPlayer();
-        String title = event.getNewBookMeta().getTitle();
-        if (title == null) {
-            return;
-        }
-        if (title.length() != 1) {
-            return;
-        }
-
-        List<String> pages = event.getNewBookMeta().getPages();
-        String code = String.join("\n", pages);
-        this.game.SubmitProblem(player, title, code);
+    fun onPlayerRespawn(event: PlayerRespawnEvent) {
+        event.respawnLocation = spawnManager!!.randomSpawnLocation!!
     }
 
-    void ResetChests() {
-        updatedChests.clear();
+    @EventHandler(priority = EventPriority.MONITOR)
+    fun onInventoryClick(event: InventoryClickEvent?) {
+        game!!.BuyMerchant(event!!)
     }
 
-    void ReloadConfig() {
-        game.ReloadConfig();
+    @EventHandler
+    fun onPlayerEditBook(event: PlayerEditBookEvent) {
+        if (!event.isSigning) {
+            return
+        }
+        event.isCancelled = true
+        val player = event.player
+        val title = event.newBookMeta.title ?: return
+        if (title.length != 1) {
+            return
+        }
+        val pages = event.newBookMeta.pages
+        val code = pages.joinToString(separator = "\n")
+        game!!.SubmitProblem(player, title, code)
     }
 
-    void GetStatus(Player player) {
-        game.GetStatus(player);
+    fun ResetChests() {
+        updatedChests!!.clear()
+    }
+
+    fun ReloadConfig() {
+        game!!.ReloadConfig()
+    }
+
+    fun GetStatus(player: Player?) {
+        game!!.GetStatus(player!!)
     }
 }
