@@ -1,18 +1,18 @@
-package ru.algocode.exam2022;
+package ru.algocode.exam2022.Utils;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.Random;
 
-class Utils {
-    static Random random;
+public class Utils {
+    public static Random random;
 
     static {
         Utils.random = new Random();
     }
 
-    static String getDeltaString(int delta) {
+    public static String getDeltaString(int delta) {
         if (delta > 0) {
             return ChatColor.GREEN + "+" + delta + ChatColor.RESET;
         } else {
@@ -20,7 +20,7 @@ class Utils {
         }
     }
 
-    static void sendTitle(Player player, String message) {
+    public static void sendTitle(Player player, String message) {
         player.sendTitle(message, "", 15, 25, 15);
     }
 }

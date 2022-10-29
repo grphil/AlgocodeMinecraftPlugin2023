@@ -10,6 +10,9 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
 import ru.algocode.ejudge.EjudgeSession
+import ru.algocode.exam2022.Utils.ExternalXmlParser
+import ru.algocode.exam2022.Utils.Stats
+import ru.algocode.exam2022.Utils.Utils
 import java.util.concurrent.ConcurrentHashMap
 
 class GameState internal constructor(private val plugin: JavaPlugin) {

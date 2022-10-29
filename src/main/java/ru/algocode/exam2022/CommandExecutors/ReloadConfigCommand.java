@@ -1,15 +1,16 @@
-package ru.algocode.exam2022;
+package ru.algocode.exam2022.CommandExecutors;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import ru.algocode.exam2022.Exam2022;
 
 public class ReloadConfigCommand implements CommandExecutor {
     private final Exam2022 plugin;
 
-    ReloadConfigCommand(Exam2022 plugin) {
+    public ReloadConfigCommand(Exam2022 plugin) {
         this.plugin = plugin;
     }
 

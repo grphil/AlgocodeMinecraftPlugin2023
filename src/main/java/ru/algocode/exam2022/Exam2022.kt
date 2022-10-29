@@ -6,6 +6,10 @@ import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
+import ru.algocode.exam2022.CommandExecutors.EjudgeStatusCommand
+import ru.algocode.exam2022.CommandExecutors.ReloadConfigCommand
+import ru.algocode.exam2022.CommandExecutors.ResetChestsCommand
+import ru.algocode.exam2022.CommandExecutors.SpawnCommand
 import ru.algocode.exam2022.EventHandlers.BlockEvents
 import ru.algocode.exam2022.EventHandlers.EntityEvents
 import ru.algocode.exam2022.EventHandlers.InventoryEvents

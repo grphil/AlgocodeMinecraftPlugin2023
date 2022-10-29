@@ -1,11 +1,11 @@
-package ru.algocode.exam2022;
+package ru.algocode.exam2022.Utils;
 
 import java.util.*;
 
 public class Stats {
 
-    private String name;
-    private String login;
+    final private String name;
+    final private String login;
 
     private String ejudgeLogin;
     private String ejudgePassword;
@@ -30,7 +30,7 @@ public class Stats {
     private boolean inForbiddenZone;
     private List<String> problems;
 
-    Stats(List<Object> sheetsRow) {
+    public Stats(List<Object> sheetsRow) {
         this.name = (String) sheetsRow.get(0);
         this.login = (String) sheetsRow.get(1);
         this.totalScore = Integer.parseInt((String) sheetsRow.get(2));
@@ -47,20 +47,20 @@ public class Stats {
         this.inForbiddenZone = false;
     }
 
-    void LoadProblems(List<Object> problemsRow) {
-        this.problems = new ArrayList<String>();
+    public void LoadProblems(List<Object> problemsRow) {
+        this.problems = new ArrayList<>();
         for (Object problemVerdict : problemsRow) {
             this.problems.add((String) problemVerdict);
         }
     }
 
-    void AddEjudgeAuth(List<Object> sheetsRow) {
+    public void AddEjudgeAuth(List<Object> sheetsRow) {
         this.ejudgeLogin = (String) sheetsRow.get(2);
         this.ejudgePassword = (String) sheetsRow.get(3);
         this.ejudgeId =  Integer.parseInt((String) sheetsRow.get(4));
     }
 
-    void ExportStats(List<Object> sheetsRow, List<Object> problemsRow) {
+    public void ExportStats(List<Object> sheetsRow, List<Object> problemsRow) {
         sheetsRow.add(this.totalScore);
         sheetsRow.add(this.problemScore);
         sheetsRow.add(this.inGame);
@@ -76,7 +76,7 @@ public class Stats {
         problemsRow.addAll(this.problems);
     }
 
-    void RecalculateScore(Stats multipliers) {
+    public void RecalculateScore(Stats multipliers) {
         this.problemScore = 0;
         for (String verdict : this.problems) {
             if (Objects.equals(verdict, "OK")) {
@@ -95,73 +95,73 @@ public class Stats {
                 this.penalty * multipliers.penalty;
     }
 
-    int GetScore() {
+    public int GetScore() {
         return this.totalScore;
     }
 
-    void Purchase(int price) {
+    public void Purchase(int price) {
         this.purchased += price;
     }
 
-    void Died() {
+    public void Died() {
         this.deaths++;
     }
 
-    void KilledSomeone(int timeUntilNextKill) {
+    public void KilledSomeone(int timeUntilNextKill) {
         this.kills++;
         this.timeUntilNextKill += timeUntilNextKill;
     }
 
-    void CruelKilledSomeone(int timeUntilNextKill) {
+    public void CruelKilledSomeone(int timeUntilNextKill) {
         this.cruelKills++;
         this.timeUntilNextKill += timeUntilNextKill;
     }
 
-    void IncInGame() {
+    public void IncInGame() {
         this.inGame++;
     }
 
-    void Tick() {
+    public void Tick() {
         if (this.timeUntilNextKill > 0) {
             this.timeUntilNextKill--;
         }
     }
 
-    void InAllowedZone() {
+    public void InAllowedZone() {
         if (this.timeInForbiddenZone > 0) {
             this.timeInForbiddenZone--;
         }
         this.inForbiddenZone = false;
     }
 
-    void InForbiddenZone(int toAdd) {
+    public void InForbiddenZone(int toAdd) {
         this.timeInForbiddenZone += toAdd;
         this.inForbiddenZone = true;
     }
 
-    void TooLongInForbiddenZone(int penalty) {
+    public void TooLongInForbiddenZone(int penalty) {
         this.penalty += penalty;
         this.timeInForbiddenZone = 0;
         this.inForbiddenZone = false;
     }
 
-    int GetTimeInForbiddenZone() {
+    public int GetTimeInForbiddenZone() {
         return this.timeInForbiddenZone;
     }
 
-    boolean GetIsInForbiddenZone() {
+    public boolean GetIsInForbiddenZone() {
         return this.inForbiddenZone;
     }
 
-    int GetTimeUntilNextKill() {
+    public int GetTimeUntilNextKill() {
         return this.timeUntilNextKill;
     }
 
-    void SetBonus(int bonus) {
+    public void SetBonus(int bonus) {
         this.bonus = bonus;
     }
 
-    void ChangeProblem(int problemId, String verdict) {
+    public void ChangeProblem(int problemId, String verdict) {
         while (this.problems.size() <= problemId) {
             this.problems.add("");
         }
@@ -170,27 +170,27 @@ public class Stats {
         }
     }
 
-    String GetName() {
+    public String GetName() {
         return this.name;
     }
 
-    String GetLogin() {
+    public String GetLogin() {
         return this.login;
     }
 
-    String GetEjudgeLogin() {
+    public String GetEjudgeLogin() {
         return this.ejudgeLogin;
     }
 
-    String GetEjudgePassword() {
+    public String GetEjudgePassword() {
         return this.ejudgePassword;
     }
 
-    int GetEjudgeId() {
+    public int GetEjudgeId() {
         return this.ejudgeId;
     }
 
-    String GetStatus() {
+    public String GetStatus() {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < problems.size(); i++) {
             if (i > 0) {

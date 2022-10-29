@@ -2,6 +2,7 @@ package ru.algocode.exam2022
 
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
+import ru.algocode.exam2022.Utils.Stats
 
 class Config internal constructor(plugin: JavaPlugin) {
     var ChestItems: MutableList<ParametrizedItemStack>? = null
@@ -88,8 +89,8 @@ class Config internal constructor(plugin: JavaPlugin) {
             val problemOutput = (row[6] as String?)!!
             val problemSample1Input = (row[7] as String?)!!
             val problemSample1Output = (row[8] as String?)!!
-            var problemSample2Input: String? = ""
-            var problemSample2Output: String? = ""
+            var problemSample2Input = ""
+            var problemSample2Output = ""
             if (row.size > 9) {
                 problemSample2Input = (row[9] as String?)!!
                 problemSample2Output = (row[10] as String?)!!

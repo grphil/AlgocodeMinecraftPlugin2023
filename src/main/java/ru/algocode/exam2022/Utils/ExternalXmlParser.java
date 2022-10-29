@@ -1,10 +1,11 @@
-package ru.algocode.exam2022;
+package ru.algocode.exam2022.Utils;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.algocode.exam2022.Utils.Stats;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,11 +21,11 @@ public class ExternalXmlParser {
     private final JavaPlugin plugin;
     private int lastRunId = 0;
 
-    ExternalXmlParser(JavaPlugin plugin) {
+    public ExternalXmlParser(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
-    void UpdateStandings(String externalXmlPath, ConcurrentHashMap<String, Stats> players) throws ParserConfigurationException, IOException, SAXException {
+    public void UpdateStandings(String externalXmlPath, ConcurrentHashMap<String, Stats> players) throws ParserConfigurationException, IOException, SAXException {
         Path externalLog;
         try {
             externalLog = Path.of(externalXmlPath);
