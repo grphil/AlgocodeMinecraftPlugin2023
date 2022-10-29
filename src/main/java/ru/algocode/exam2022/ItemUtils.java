@@ -1,27 +1,25 @@
 package ru.algocode.exam2022;
 
-import com.google.common.collect.ImmutableList;
-
 import java.util.*;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import ru.algocode.exam2022.Utils.Utils;
 
-class ItemUtils {
+public class ItemUtils {
     private static final int maxPageLength = 160;
 
     static ItemStack CreatePotion(String name, int maxDuration, int amplifier) {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta data = (PotionMeta) potion.getItemMeta();
+        assert data != null;
         data.setColor(Color.PURPLE);
         int duration = 20 * (10 + Utils.random.nextInt(maxDuration));
         PotionEffectType type = PotionEffectType.getByName(name);
@@ -38,6 +36,7 @@ class ItemUtils {
         if (Objects.equals(name, "LOCATOR")) {
             ItemStack item = new ItemStack(Material.BLAZE_ROD);
             ItemMeta meta = item.getItemMeta();
+            assert meta != null;
             meta.setDisplayName(ChatColor.RED + "Локатор соперников");
             item.setItemMeta(meta);
             return item;
@@ -62,6 +61,7 @@ class ItemUtils {
     ) {
         ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
         BookMeta data = (BookMeta) book.getItemMeta();
+        assert data != null;
         data.setTitle(ChatColor.GREEN + "Задача " + problemLabel);
         data.setAuthor(ChatColor.RED + "grphil & peltorator");
 
