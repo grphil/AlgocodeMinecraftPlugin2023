@@ -1,45 +1,49 @@
 package ru.algocode.exam2022
 
-import org.bukkit.ChatColor
 import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.block.Chest
-import org.bukkit.entity.EntityType
+import org.bukkit.command.CommandExecutor
 import org.bukkit.entity.Player
-import org.bukkit.entity.Villager
-import org.bukkit.event.EventHandler
-import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
-import org.bukkit.event.block.Action
-import org.bukkit.event.block.BlockPlaceEvent
-import org.bukkit.event.entity.EntitySpawnEvent
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.inventory.InventoryOpenEvent
-import org.bukkit.event.player.*
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
+import ru.algocode.exam2022.EventHandlers.BlockEvents
+import ru.algocode.exam2022.EventHandlers.EntityEvents
+import ru.algocode.exam2022.EventHandlers.InventoryEvents
 import ru.algocode.exam2022.EventHandlers.PlayerEvents
 
+/**
+ * Singleton object for plugin (я задолбался передавать plugin в каждую функцию).
+ * Short for "Algocode Plugin"
+ *
+ * Initiated in [Exam2022.onEnable]
+ */
+lateinit var APlugin: Exam2022
+
 class Exam2022 : JavaPlugin(), Listener {
-    private var game: GameState? = null
-    private var spawnManager: SpawnManager? = null
-    private var updatedChests: HashSet<Location?>? = null
+    var game: GameState? = null
+    var spawnManager: SpawnManager? = null
+    var updatedChests: HashSet<Location?>? = null
     private fun initConfig() {
-        config
-        config.getString("spreadsheet_id")!!
-        config.getString("config_table_id")!!
-        config.options().copyDefaults(true)
-        saveConfig()
+        config.run {
+            getString("spreadsheet_id")!!
+            getString("config_table_id")!!
+            options().copyDefaults(true)
+            saveConfig()
+        }
     }
 
     private lateinit var eventHandlers: List<Listener>
+    private lateinit var commands: Map<String, CommandExecutor>
 
     override fun onEnable() {
+        APlugin = this
         initConfig()
         game = GameState(this)
         eventHandlers = listOf<Listener>(
-            PlayerEvents(game, spawnManager, this),
-            this,
+            PlayerEvents(),
+            BlockEvents(),
+            InventoryEvents(),
+            EntityEvents(),
         )
         for (player in server.onlinePlayers) {
             game!!.InitPlayer(player)
@@ -52,124 +56,35 @@ class Exam2022 : JavaPlugin(), Listener {
         spawnManager = SpawnManager(this)
         updatedChests = HashSet()
         registerEventHandlers()
-        getCommand("addspawn")!!.setExecutor(SpawnCommand(spawnManager))
-        getCommand("resetchests")!!.setExecutor(ResetChestsCommand(this))
-        getCommand("syncconfig")!!.setExecutor(ReloadConfigCommand(this))
-        getCommand("problemstatus")!!.setExecutor(EjudgeStatusCommand(this))
+        commands = mapOf(
+            "addspawn" to SpawnCommand(spawnManager),
+            "resetchests" to ResetChestsCommand(this),
+            "syncconfig" to ReloadConfigCommand(this),
+            "problemstatus" to EjudgeStatusCommand(this),
+        )
+        registerCommands()
     }
 
+    private fun registerCommands() {
+        commands.forEach { (commandName, executor) ->
+            getCommand(commandName)!!.setExecutor(executor)
+        }
+    }
     private fun registerEventHandlers() {
         eventHandlers.forEach { listener ->
             server.pluginManager.registerEvents(listener, this)
         }
     }
 
-
-
-    @EventHandler
-    fun onBlockPlace(event: BlockPlaceEvent) {
-        val block = event.blockPlaced
-        val player = event.player
-        if (block.type == Material.CHEST && player.isOp) {
-            val chestInventory = (block.state as Chest).blockInventory
-            game!!.FillChest(chestInventory)
-        }
-        updatedChests!!.add(block.location)
-    }
-
-    @EventHandler
-    fun onPlayerInteract(event: PlayerInteractEvent) {
-        if (event.action != Action.RIGHT_CLICK_AIR && event.action != Action.RIGHT_CLICK_BLOCK) {
-            return
-        }
-        val player = event.player
-        val item = event.item
-        if (item == null || item.type != Material.BLAZE_ROD) {
-            return
-        }
-        item.amount = item.amount - 1
-        player.sendMessage(ChatColor.RED.toString() + "Данные об игроках:")
-        for (online in server.onlinePlayers) {
-            if (player === online || online.isOp) {
-                continue
-            }
-            val message = online.name +
-                    ": X=" + online.location.blockX +
-                    ", Y=" + online.location.blockY +
-                    ", Z=" + online.location.blockZ
-            player.sendMessage(message)
-        }
-    }
-
-    @EventHandler
-    fun onInventoryOpenEvent(e: InventoryOpenEvent) {
-        if (e.inventory.holder is Chest) {
-            val loc = e.inventory.location
-            if (updatedChests!!.contains(loc)) {
-                return
-            }
-            updatedChests!!.add(loc)
-            e.inventory.clear()
-            game!!.FillChest(e.inventory)
-        }
-    }
-
-    @EventHandler
-    fun onEntitySpawn(event: EntitySpawnEvent) {
-        if (event.entityType == EntityType.VILLAGER) {
-            val villager = event.entity as Villager
-            villager.isInvulnerable = true
-            villager.setAI(false)
-            villager.customName = ChatColor.GREEN.toString() + "Торговец"
-            villager.isCustomNameVisible = true
-        }
-    }
-
-    @EventHandler
-    fun onPlayerInteractEntity(event: PlayerInteractEntityEvent) {
-        if (event.rightClicked.type != EntityType.VILLAGER) {
-            return
-        }
-        event.isCancelled = true
-        val player = event.player
-        game!!.OpenMerchant(player)
-    }
-
-    @EventHandler
-    fun onPlayerRespawn(event: PlayerRespawnEvent) {
-        event.respawnLocation = spawnManager!!.randomSpawnLocation!!
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    fun onInventoryClick(event: InventoryClickEvent?) {
-        game!!.BuyMerchant(event!!)
-    }
-
-    @EventHandler
-    fun onPlayerEditBook(event: PlayerEditBookEvent) {
-        if (!event.isSigning) {
-            return
-        }
-        event.isCancelled = true
-        val player = event.player
-        val title = event.newBookMeta.title ?: return
-        if (title.length != 1) {
-            return
-        }
-        val pages = event.newBookMeta.pages
-        val code = pages.joinToString(separator = "\n")
-        game!!.SubmitProblem(player, title, code)
-    }
-
-    fun ResetChests() {
+    fun resetChests() {
         updatedChests!!.clear()
     }
 
-    fun ReloadConfig() {
+    fun reloadGameConfig() {
         game!!.ReloadConfig()
     }
 
-    fun GetStatus(player: Player?) {
+    fun getStatus(player: Player?) {
         game!!.GetStatus(player!!)
     }
 }
