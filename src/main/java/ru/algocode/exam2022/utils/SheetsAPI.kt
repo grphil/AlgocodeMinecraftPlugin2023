@@ -41,7 +41,7 @@ class SheetsAPI(private val spreadsheetId: String, val plugin: Plugin) {
         }
         val JSON_FACTORY: JsonFactory = GsonFactory.getDefaultInstance()
         service = Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
-            .setApplicationName("algocodemcplugin")
+            .setApplicationName(plugin.config.getString("google_cloud_application_name"))
             .build()
     }
 
