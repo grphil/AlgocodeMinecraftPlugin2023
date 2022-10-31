@@ -1,0 +1,11 @@
+on: [push]
+jobs: 
+  BuildPlugin:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gradle build
+    
+      - uses: actions/upload-artifact@v3
+        with:
+          name: plugin
+          path: build/libs/exam2022-1.0.jar
