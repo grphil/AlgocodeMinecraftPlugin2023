@@ -7,7 +7,6 @@ import java.util.*
 class SpawnManager internal constructor(private val plugin: JavaPlugin) {
     var spawns: MutableList<Location?>? = null
     private var pointer = 0
-    var team: String? = null
 
     init {
         initializeSpawns()

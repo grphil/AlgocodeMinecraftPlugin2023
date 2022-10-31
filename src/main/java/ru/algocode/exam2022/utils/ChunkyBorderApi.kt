@@ -25,28 +25,28 @@ class ChunkyBorderApi {
         }
     }
 
-    public fun world(world: String = "world") = execute("$prf world $world")
-    public fun shape(shape: String = "square") = execute("$prf shape $shape")
-    public fun center(x: Long, z: Long) = execute("$prf center $x $z")
-    public fun radius(r: Long) = execute("$prf radius $r")
-    public fun add() = execute("$prf border add")
-    public fun remove() = execute("$prf border remove")
+    fun world(world: String = "world") = execute("$prf world $world")
+    fun shape(shape: String = "square") = execute("$prf shape $shape")
+    fun center(x: Long, z: Long) = execute("$prf center $x $z")
+    fun radius(r: Long) = execute("$prf radius $r")
+    fun add() = execute("$prf border add")
+    fun remove() = execute("$prf border remove")
 
     /**
      * adds CHUNKY border
      * @param x x of center of border
-     * @param y y of center of border
+     * @param z z of center of border
      * @param r radius
      * @param world name of world to add the border to
      * @param shape shape of border, e.g. "circle", "square", etc
      */
-    public fun replaceBorder(
+    fun replaceBorder(
         x: Long,
         z: Long,
         r: Long,
         world: String = "world",
-        shape: String = "square")
-    {
+        shape: String = "square"
+    ) {
         world(world)
         remove()
         shape(shape)
@@ -59,7 +59,7 @@ class ChunkyBorderApi {
     /**
      * makes border bypassable to [player]
      */
-    public fun bypass(player: String) = execute("$prf border bypass $player")
+    fun bypass(player: String) = execute("$prf border bypass $player")
 }
 
 class DependencyPluginNotLoaded(override val message: String) : Exception()
