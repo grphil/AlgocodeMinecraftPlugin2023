@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package ru.algocode.exam2022
+package ru.algocode.exam2022.utils
 
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential

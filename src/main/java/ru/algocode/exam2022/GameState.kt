@@ -3,6 +3,9 @@ package ru.algocode.exam2022
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
+import org.bukkit.boss.BarColor
+import org.bukkit.boss.BarStyle
+import org.bukkit.boss.BossBar
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.Inventory
@@ -10,21 +13,26 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
 import ru.algocode.ejudge.EjudgeSession
-import ru.algocode.exam2022.Utils.ExternalXmlParser
-import ru.algocode.exam2022.Utils.Stats
-import ru.algocode.exam2022.Utils.Utils
+import ru.algocode.exam2022.utils.ExternalXmlParser
+import ru.algocode.exam2022.utils.SheetsAPI
+import ru.algocode.exam2022.utils.Stats
+import ru.algocode.exam2022.utils.Utils
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.abs
+import kotlin.math.max
 
 class GameState internal constructor(private val plugin: JavaPlugin) {
-    private val config: Config
+    val config: Config
     private val playersApi: SheetsAPI
     private val players: ConcurrentHashMap<String, Stats>
+    private val bossBars: ConcurrentHashMap<String, BossBar>
     private var playersCount: Int
     private val scoreboardObjective: Objective
     private var secondsCount: Int
     var xmlParser: ExternalXmlParser
 
     init {
+        bossBars = ConcurrentHashMap()
         xmlParser = ExternalXmlParser(plugin)
         playersCount = 1
         secondsCount = 0
@@ -33,7 +41,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         players = ConcurrentHashMap()
         ReloadConfig()
         try {
-            xmlParser.UpdateStandings(config.ExternalXmlPath, players)
+            xmlParser.UpdateStandings(config.externalXmlPath, players)
         } catch (e: Exception) {
             println("Failed to update standings")
         }
@@ -46,7 +54,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
                 "score",
                 "dummy",
                 ChatColor.GOLD.toString() +
-                "Таблица результатов",
+                        "Таблица результатов",
             )
         scoreboardObjective.displaySlot = DisplaySlot.SIDEBAR
     }
@@ -58,7 +66,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         }
         if (secondsCount % 20 == 10) {
             try {
-                xmlParser.UpdateStandings(config.ExternalXmlPath, players)
+                xmlParser.UpdateStandings(config.externalXmlPath, players)
             } catch (e: Exception) {
                 println("Failed to update standings")
             }
@@ -85,17 +93,17 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         if (players.containsKey(name)) {
             val playerStats = players[name]
             if (playerStats!!.GetTimeUntilNextKill() > 0) {
-                playerStats.CruelKilledSomeone(config.TimeUntilNextKill)
+                playerStats.CruelKilledSomeone(config.timeUntilNextKill)
                 player.sendMessage("Слишком частые убийства")
             } else {
-                playerStats.KilledSomeone(config.TimeUntilNextKill)
+                playerStats.KilledSomeone(config.timeUntilNextKill)
             }
         }
         updatePlayerInfo(player)
     }
 
     fun FillChest(inventory: Inventory) {
-        for (item in config.ChestItems!!) {
+        for (item in config.chestItems!!) {
             if (item.Generated()) {
                 val itemStack = item.GenerateItem()
                 val pos = Utils.random.nextInt(inventory.size)
@@ -105,11 +113,11 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
     }
 
     fun OpenMerchant(player: Player?) {
-        config.MerchantMenu!!.Open(player)
+        config.merchantMenu!!.Open(player)
     }
 
     fun BuyMerchant(event: InventoryClickEvent) {
-        val itemStack = config.MerchantMenu!!.OnClick(event) ?: return
+        val itemStack = config.merchantMenu!!.OnClick(event) ?: return
         val item = itemStack.GenerateItem()
         val meta = item.itemMeta
         meta!!.lore = emptyList()
@@ -139,11 +147,11 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
             val player = Stats(row)
             players[player.GetLogin()] = player
         }
-        for (row in playersApi["Problems!B" + (playersCount + 1) + ":" + ('B'.code + config.ProblemsCount).toChar() + newPlayersCount]!!) {
+        for (row in playersApi["Problems!B" + (playersCount + 1) + ":" + ('B'.code + config.problemsCount).toChar() + newPlayersCount]!!) {
             val login = row[0] as String
             if (players.containsKey(login)) {
                 players[login]!!.LoadProblems(row.subList(1, row.size))
-                players[login]!!.RecalculateScore(config.StatsMultiplier)
+                players[login]!!.RecalculateScore(config.statsMultiplier)
             }
         }
         for (ejudgeAuth in config.GetSheetsApi()["Users!A" + (playersCount + 1) + ":E" + newPlayersCount]!!) {
@@ -164,7 +172,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
                 var pasword = playerStats!!.GetEjudgePassword()
                 var problem = label
                 var source = code
-                var contest = config.EjudgeContestId
+                var contest = config.ejudgeContestId
                 override fun run() {
                     val session = EjudgeSession(login, pasword, contest)
                     session.authenticate()
@@ -184,15 +192,15 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
     }
 
     private fun spawnItems() {
-        for (item in config.SpawnItems!!) {
+        for (item in config.spawnItems!!) {
             if (item.Generated()) {
                 val itemStack = item.GenerateItem()
                 val world = plugin.server.getWorld("world")
                 val x =
-                    config.SpawnerX + Utils.random.nextInt(config.SpawnerRadius * 2 + 1) - config.SpawnerRadius - 1
+                    config.spawnerX + Utils.random.nextInt(config.spawnerRadius * 2 + 1) - config.spawnerRadius - 1
                 val z =
-                    config.SpawnerZ + Utils.random.nextInt(config.SpawnerRadius * 2 + 1) - config.SpawnerRadius - 1
-                val loc = Location(world, x.toDouble(), config.SpawnerY.toDouble(), z.toDouble())
+                    config.spawnerZ + Utils.random.nextInt(config.spawnerRadius * 2 + 1) - config.spawnerRadius - 1
+                val loc = Location(world, x.toDouble(), config.spawnerY.toDouble(), z.toDouble())
                 loc.world!!.dropItemNaturally(loc, itemStack)
             }
         }
@@ -208,23 +216,59 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
                     playerStats.IncInGame()
                 }
                 val location = player.location
-                if (Math.abs(location.x - config.SpawnerX) <= config.SpawnerRadius * 2 && Math.abs(location.y - config.SpawnerY) <= config.SpawnerRadius * 2 && Math.abs(
-                        location.z - config.SpawnerZ
-                    ) <= config.SpawnerRadius * 2
+                if (
+                    abs(location.x - config.spawnerX) <= config.spawnerRadius &&
+                    abs(location.z - config.spawnerZ) <= config.spawnerRadius
                 ) {
                     if (!playerStats.GetIsInForbiddenZone()) {
-                        player.sendMessage(
-                            "Вы в запретной зоне, покинте её в течении " + (config.MaxTimeInForbiddenZone - playerStats.GetTimeInForbiddenZone()) / config.TimeIncreaseForForbiddenZone +
-                                    "секунд"
-                        )
+                        bossBars[name]?.removeAll()
+                        bossBars.remove(name)
+                        bossBars[name] =
+                            plugin.server.createBossBar("Запретная зона", BarColor.RED, BarStyle.SOLID).apply {
+                                addPlayer(player)
+                                progress = max(
+                                    1.0 - playerStats.GetTimeInForbiddenZone() / config.maxTimeInForbiddenZone.toDouble(),
+                                    0.0
+                                )
+                                isVisible = true
+                            }
                     }
-                    playerStats.InForbiddenZone(config.TimeIncreaseForForbiddenZone)
-                    if (playerStats.GetTimeInForbiddenZone() >= config.MaxTimeInForbiddenZone) {
-                        player.sendMessage(ChatColor.RED.toString() + "Слишком долго в запретной зоне, штраф " + config.PenaltyForForbiddenZone)
-                        playerStats.TooLongInForbiddenZone(config.PenaltyForForbiddenZone)
-                    }
+                    playerStats.InForbiddenZone(config.timeIncreaseForForbiddenZone)
+                    if (playerStats.GetTimeInForbiddenZone() >= config.maxTimeInForbiddenZone) {
+                        val scoreBefore = playerStats.GetScore()
+                        playerStats.TooLongInForbiddenZone(config.penaltyForForbiddenZone)
+                        bossBars[name]!!.run {
+                            color = BarColor.YELLOW
+                            setTitle("Запретная зона: штраф " +
+                                    "${config.penaltyForForbiddenZone}, " +
+                                    "$scoreBefore -> ${scoreBefore - config.penaltyForForbiddenZone}")
+                        }
+                    } else
+                        bossBars[name]!!.run {
+                            progress = max(
+                                1.0 - playerStats.GetTimeInForbiddenZone() / config.maxTimeInForbiddenZone.toDouble(),
+                                0.0
+                            )
+                            setTitle(
+                                "Запретная зона: осталоcь " +
+                                        "${
+                                            (config.maxTimeInForbiddenZone - playerStats.GetTimeInForbiddenZone())
+                                                    / config.timeIncreaseForForbiddenZone
+                                        } сек. "
+                            )
+                        }
                 } else {
                     playerStats.InAllowedZone()
+                    if (bossBars[name]?.color in listOf(BarColor.RED, BarColor.YELLOW)) {
+                        bossBars[name]!!.run {
+                            color = BarColor.GREEN
+                            progress = 1.0
+                            setTitle("Вы покинули запретную зону")
+                        }
+                    } else {
+                        bossBars[name]?.removeAll()
+                        bossBars.remove(name)
+                    }
                 }
                 updatePlayerInfo(player)
             }
@@ -242,13 +286,13 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
             val bonus: Int = (row[8] as String).toInt()
             if (players.containsKey(login)) {
                 players[login]!!.SetBonus(bonus)
-                players[login]!!.RecalculateScore(config.StatsMultiplier)
+                players[login]!!.RecalculateScore(config.statsMultiplier)
                 players[login]!!.ExportStats(gamestats[idx], problems[idx])
             }
             idx++
         }
         playersApi.update("Gamestats!C2:M$playersCount", gamestats)
-        playersApi.update("Problems!C2:" + ('C'.code + config.ProblemsCount).toChar() + playersCount, problems)
+        playersApi.update("Problems!C2:" + ('C'.code + config.problemsCount).toChar() + playersCount, problems)
     }
 
     private fun updatePlayerInfo(player: Player) {
@@ -258,7 +302,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
             displayName = ChatColor.RED.toString() + "Преподаватель " + ChatColor.GOLD + name + ChatColor.RESET
         } else if (players.containsKey(name)) {
             val playerStats = players[name]
-            playerStats!!.RecalculateScore(config.StatsMultiplier)
+            playerStats!!.RecalculateScore(config.statsMultiplier)
             val score = playerStats.GetScore()
             displayName = "(" + score + ") " + ChatColor.GREEN + playerStats.GetName() + ChatColor.RESET
             scoreboardObjective.getScore(playerStats.GetName()).score = score

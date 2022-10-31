@@ -23,7 +23,7 @@ class SpawnManager internal constructor(private val plugin: JavaPlugin) {
             val z = parts[3].toInt()
             spawns!!.add(Location(plugin.server.getWorld(world), x.toDouble(), y.toDouble(), z.toDouble()))
         }
-        Collections.shuffle(spawns)
+        spawns!!.shuffle()
         pointer = 0
     }
 

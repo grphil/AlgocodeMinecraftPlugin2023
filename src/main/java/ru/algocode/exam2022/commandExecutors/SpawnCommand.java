@@ -1,4 +1,4 @@
-package ru.algocode.exam2022.CommandExecutors;
+package ru.algocode.exam2022.commandExecutors;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

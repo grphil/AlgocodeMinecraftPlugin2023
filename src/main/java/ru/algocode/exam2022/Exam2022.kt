@@ -4,29 +4,31 @@ import org.bukkit.Location
 import org.bukkit.command.CommandExecutor
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
+import org.bukkit.event.world.WorldEvent
+import org.bukkit.plugin.PluginManager
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
-import ru.algocode.exam2022.CommandExecutors.EjudgeStatusCommand
-import ru.algocode.exam2022.CommandExecutors.ReloadConfigCommand
-import ru.algocode.exam2022.CommandExecutors.ResetChestsCommand
-import ru.algocode.exam2022.CommandExecutors.SpawnCommand
-import ru.algocode.exam2022.EventHandlers.BlockEvents
-import ru.algocode.exam2022.EventHandlers.EntityEvents
-import ru.algocode.exam2022.EventHandlers.InventoryEvents
-import ru.algocode.exam2022.EventHandlers.PlayerEvents
+import ru.algocode.exam2022.commandExecutors.EjudgeStatusCommand
+import ru.algocode.exam2022.commandExecutors.ReloadConfigCommand
+import ru.algocode.exam2022.commandExecutors.ResetChestsCommand
+import ru.algocode.exam2022.commandExecutors.SpawnCommand
+import ru.algocode.exam2022.eventHandlers.BlockEvents
+import ru.algocode.exam2022.eventHandlers.EntityEvents
+import ru.algocode.exam2022.eventHandlers.InventoryEvents
+import ru.algocode.exam2022.eventHandlers.PlayerEvents
+import java.lang.Thread.sleep
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Singleton object for plugin (я задолбался передавать plugin в каждую функцию).
- * Short for "Algocode Plugin"
- *
- * Initiated in [Exam2022.onEnable]
  */
-lateinit var APlugin: Exam2022
+lateinit var plugin: Exam2022
 
 class Exam2022 : JavaPlugin(), Listener {
-    var game: GameState? = null
-    var spawnManager: SpawnManager? = null
-    var updatedChests: HashSet<Location?>? = null
+    lateinit var game: GameState
+    lateinit var spawnManager: SpawnManager
+    lateinit var updatedChests: MutableSet<Location?>
+    lateinit var borderApi: ChunkyBorderApi
     private fun initConfig() {
         config.run {
             getString("spreadsheet_id")!!
@@ -40,25 +42,26 @@ class Exam2022 : JavaPlugin(), Listener {
     private lateinit var commands: Map<String, CommandExecutor>
 
     override fun onEnable() {
-        APlugin = this
+        plugin = this
         initConfig()
+        borderApi = ChunkyBorderApi()
         game = GameState(this)
-        eventHandlers = listOf<Listener>(
+        eventHandlers = listOf(
             PlayerEvents(),
             BlockEvents(),
             InventoryEvents(),
             EntityEvents(),
         )
         for (player in server.onlinePlayers) {
-            game!!.InitPlayer(player)
+            game.InitPlayer(player)
         }
         object : BukkitRunnable() {
             override fun run() {
-                game!!.Tick()
+                game.Tick()
             }
         }.runTaskTimer(this, 20, 20)
         spawnManager = SpawnManager(this)
-        updatedChests = HashSet()
+        updatedChests = ConcurrentHashMap.newKeySet<Location>()
         registerEventHandlers()
         commands = mapOf(
             "addspawn" to SpawnCommand(spawnManager),
@@ -74,6 +77,7 @@ class Exam2022 : JavaPlugin(), Listener {
             getCommand(commandName)!!.setExecutor(executor)
         }
     }
+
     private fun registerEventHandlers() {
         eventHandlers.forEach { listener ->
             server.pluginManager.registerEvents(listener, this)
@@ -81,14 +85,14 @@ class Exam2022 : JavaPlugin(), Listener {
     }
 
     fun resetChests() {
-        updatedChests!!.clear()
+        updatedChests.clear()
     }
 
     fun reloadGameConfig() {
-        game!!.ReloadConfig()
+        game.ReloadConfig()
     }
 
     fun getStatus(player: Player?) {
-        game!!.GetStatus(player!!)
+        game.GetStatus(player!!)
     }
 }

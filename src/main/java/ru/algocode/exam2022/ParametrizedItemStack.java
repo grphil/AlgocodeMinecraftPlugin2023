@@ -1,7 +1,7 @@
 package ru.algocode.exam2022;
 
 import org.bukkit.inventory.ItemStack;
-import ru.algocode.exam2022.Utils.Utils;
+import ru.algocode.exam2022.utils.Utils;
 
 public class ParametrizedItemStack {
     private ItemStack item;

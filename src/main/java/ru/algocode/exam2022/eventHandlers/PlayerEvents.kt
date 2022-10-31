@@ -1,4 +1,4 @@
-package ru.algocode.exam2022.EventHandlers
+package ru.algocode.exam2022.eventHandlers
 
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -9,23 +9,24 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.*
 import org.bukkit.scheduler.BukkitRunnable
-import ru.algocode.exam2022.APlugin
+import ru.algocode.exam2022.plugin
 
 class PlayerEvents : Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         val player = event.player
-        APlugin.game!!.InitPlayer(player)
+        plugin.game.InitPlayer(player)
+        plugin.borderApi.bypass(player.name)
         event.joinMessage = player.displayName + ChatColor.RESET + " присоединился!"
         player.sendMessage(ChatColor.GOLD.toString() + "Добро пожаловать на наш сервер экзамена")
         if (!player.hasPlayedBefore()) {
-            val loc = APlugin.spawnManager!!.randomSpawnLocation
+            val loc = plugin.spawnManager.randomSpawnLocation
             loc!!.chunk.load()
             object : BukkitRunnable() {
                 override fun run() {
                     player.teleport(loc)
                 }
-            }.runTaskLater(APlugin, 1)
+            }.runTaskLater(plugin, 1)
         }
     }
 
@@ -38,10 +39,10 @@ class PlayerEvents : Listener {
     @EventHandler
     fun onPlayerDeath(event: PlayerDeathEvent) {
         val killed = event.entity
-        APlugin.game!!.Died(killed)
+        plugin.game.Died(killed)
         val killer = killed.killer
         if (killer != null) {
-            APlugin.game!!.Killed(killer)
+            plugin.game.Killed(killer)
         }
     }
 
@@ -57,7 +58,7 @@ class PlayerEvents : Listener {
         }
         item.amount = item.amount - 1
         player.sendMessage(ChatColor.RED.toString() + "Данные об игроках:")
-        for (online in APlugin.server.onlinePlayers) {
+        for (online in plugin.server.onlinePlayers) {
             if (player === online || online.isOp) {
                 continue
             }
@@ -76,12 +77,12 @@ class PlayerEvents : Listener {
         }
         event.isCancelled = true
         val player = event.player
-        APlugin.game!!.OpenMerchant(player)
+        plugin.game.OpenMerchant(player)
     }
 
     @EventHandler
     fun onPlayerRespawn(event: PlayerRespawnEvent) {
-        event.respawnLocation = APlugin.spawnManager!!.randomSpawnLocation!!
+        event.respawnLocation = plugin.spawnManager.randomSpawnLocation!!
     }
 
     @EventHandler
@@ -97,6 +98,6 @@ class PlayerEvents : Listener {
         }
         val pages = event.newBookMeta.pages
         val code = pages.joinToString(separator = "\n")
-        APlugin.game!!.SubmitProblem(player, title, code)
+        plugin.game.SubmitProblem(player, title, code)
     }
 }

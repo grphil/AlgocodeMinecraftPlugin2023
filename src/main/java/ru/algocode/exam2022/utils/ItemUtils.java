@@ -1,4 +1,4 @@
-package ru.algocode.exam2022;
+package ru.algocode.exam2022.utils;
 
 import java.util.*;
 
@@ -11,12 +11,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import ru.algocode.exam2022.Utils.Utils;
+import ru.algocode.exam2022.utils.Utils;
 
 public class ItemUtils {
     private static final int maxPageLength = 160;
 
-    static ItemStack CreatePotion(String name, int maxDuration, int amplifier) {
+    static public ItemStack CreatePotion(String name, int maxDuration, int amplifier) {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta data = (PotionMeta) potion.getItemMeta();
         assert data != null;
@@ -32,7 +32,7 @@ public class ItemUtils {
         return potion;
     }
 
-    static ItemStack CreateItem(String name) {
+    static public ItemStack CreateItem(String name) {
         if (Objects.equals(name, "LOCATOR")) {
             ItemStack item = new ItemStack(Material.BLAZE_ROD);
             ItemMeta meta = item.getItemMeta();
@@ -49,7 +49,7 @@ public class ItemUtils {
         }
     }
 
-    static ItemStack CreateProblemBook(
+    static public ItemStack CreateProblemBook(
             String problemLabel,
             String statement,
             String input,
@@ -83,7 +83,7 @@ public class ItemUtils {
         return book;
     }
 
-    static void AddPages(List<String> pages, String text) {
+    static public void AddPages(List<String> pages, String text) {
         StringBuilder pageBuffer = new StringBuilder();
         for (String word : text.split(" ")) {
             if (pageBuffer.length() + 1 + word.length() > maxPageLength) {

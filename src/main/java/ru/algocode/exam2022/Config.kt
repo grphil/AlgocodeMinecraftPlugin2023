@@ -2,24 +2,26 @@ package ru.algocode.exam2022
 
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
-import ru.algocode.exam2022.Utils.Stats
+import ru.algocode.exam2022.utils.ItemUtils
+import ru.algocode.exam2022.utils.SheetsAPI
+import ru.algocode.exam2022.utils.Stats
 
 class Config internal constructor(plugin: JavaPlugin) {
-    var ChestItems: MutableList<ParametrizedItemStack>? = null
-    var SpawnItems: MutableList<ParametrizedItemStack>? = null
-    var MerchantMenu: ShopMenu? = null
-    var MaxTimeInForbiddenZone = 0
-    var TimeIncreaseForForbiddenZone = 0
-    var PenaltyForForbiddenZone = 0
-    var ProblemsCount = 0
-    var SpawnerX = 0
-    var SpawnerY = 0
-    var SpawnerZ = 0
-    var SpawnerRadius = 0
-    var TimeUntilNextKill = 0
-    var EjudgeContestId = 0
-    var ExternalXmlPath: String? = null
-    var StatsMultiplier: Stats? = null
+    var chestItems: MutableList<ParametrizedItemStack>? = null
+    var spawnItems: MutableList<ParametrizedItemStack>? = null
+    var merchantMenu: ShopMenu? = null
+    var maxTimeInForbiddenZone = 0
+    var timeIncreaseForForbiddenZone = 0
+    var penaltyForForbiddenZone = 0
+    var problemsCount = 0
+    var spawnerX = 0
+    var spawnerY = 0
+    var spawnerZ = 0
+    var spawnerRadius = 0
+    var timeUntilNextKill = 0
+    var ejudgeContestId = 0
+    var externalXmlPath: String? = null
+    var statsMultiplier: Stats? = null
     private val config: SheetsAPI
     private var merchantItems: MutableList<ParametrizedItemStack>? = null
 
@@ -33,22 +35,27 @@ class Config internal constructor(plugin: JavaPlugin) {
         val problemsLastRow: Int = (conf[1][0] as String?)!!.toInt()
         val potionsLastRow: Int = (conf[2][0] as String?)!!.toInt()
         val itemsLastRow: Int = (conf[3][0] as String?)!!.toInt()
-        ProblemsCount = (conf[4][0] as String?)!!.toInt()
-        MaxTimeInForbiddenZone = (conf[5][0] as String?)!!.toInt()
-        TimeIncreaseForForbiddenZone = (conf[6][0] as String?)!!.toInt()
-        PenaltyForForbiddenZone = (conf[7][0] as String?)!!.toInt()
-        SpawnerX = (conf[8][0] as String?)!!.toInt()
-        SpawnerY = (conf[9][0] as String?)!!.toInt()
-        SpawnerZ = (conf[10][0] as String?)!!.toInt()
-        SpawnerRadius = (conf[11][0] as String?)!!.toInt()
-        TimeUntilNextKill = (conf[12][0] as String?)!!.toInt()
-        EjudgeContestId = (conf[13][0] as String?)!!.toInt()
-        ExternalXmlPath = (conf[14][0] as String)
+        problemsCount = (conf[4][0] as String?)!!.toInt()
+        maxTimeInForbiddenZone = (conf[5][0] as String?)!!.toInt()
+        timeIncreaseForForbiddenZone = (conf[6][0] as String?)!!.toInt()
+        penaltyForForbiddenZone = (conf[7][0] as String?)!!.toInt()
+        spawnerX = (conf[8][0] as String?)!!.toInt()
+        spawnerY = (conf[9][0] as String?)!!.toInt()
+        spawnerZ = (conf[10][0] as String?)!!.toInt()
+        spawnerRadius = (conf[11][0] as String?)!!.toInt()
+        plugin.borderApi.replaceBorder(
+            spawnerX.toLong(),
+            spawnerZ.toLong(),
+            spawnerRadius.toLong()
+        )
+        timeUntilNextKill = (conf[12][0] as String?)!!.toInt()
+        ejudgeContestId = (conf[13][0] as String?)!!.toInt()
+        externalXmlPath = (conf[14][0] as String)
         val multipliers = config["Score!A2:M2"]
-        StatsMultiplier = Stats(multipliers!![0])
-        ChestItems = ArrayList()
+        statsMultiplier = Stats(multipliers!![0])
+        chestItems = ArrayList()
         merchantItems = ArrayList()
-        SpawnItems = ArrayList()
+        spawnItems = ArrayList()
         val potions = config["Potions!A2:F$potionsLastRow"]
         for (row in potions!!) {
             val potionName = (row[0] as String)
@@ -108,10 +115,10 @@ class Config internal constructor(plugin: JavaPlugin) {
             addItem(book, problemChest, problemPrice, problemSpawn, 1)
         }
         val needSize = (merchantItems!!.size + INVENTORY_ROW - 1) / INVENTORY_ROW * INVENTORY_ROW
-        MerchantMenu = ShopMenu("Торговец", needSize)
+        merchantMenu = ShopMenu("Торговец", needSize)
         var curPos = 0
         for (item in merchantItems!!) {
-            MerchantMenu!!.setOption(curPos++, item)
+            merchantMenu!!.setOption(curPos++, item)
         }
         return newPlayersCount
     }
@@ -122,13 +129,13 @@ class Config internal constructor(plugin: JavaPlugin) {
 
     private fun addItem(item: ItemStack, chest: Int, price: Int, spawn: Int, count: Int) {
         if (chest > 0) {
-            ChestItems!!.add(ParametrizedItemStack(item.clone(), chest, count))
+            chestItems!!.add(ParametrizedItemStack(item.clone(), chest, count))
         }
         if (price > 0) {
             merchantItems!!.add(ParametrizedItemStack(item.clone(), price, count))
         }
         if (spawn > 0) {
-            SpawnItems!!.add(ParametrizedItemStack(item.clone(), spawn, count))
+            spawnItems!!.add(ParametrizedItemStack(item.clone(), spawn, count))
         }
     }
 

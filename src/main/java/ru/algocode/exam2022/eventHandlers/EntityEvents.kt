@@ -1,4 +1,4 @@
-package ru.algocode.exam2022.EventHandlers
+package ru.algocode.exam2022.eventHandlers
 
 import org.bukkit.ChatColor
 import org.bukkit.entity.EntityType

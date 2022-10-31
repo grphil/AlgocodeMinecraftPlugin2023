@@ -1,11 +1,10 @@
-package ru.algocode.exam2022.Utils;
+package ru.algocode.exam2022.utils;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import ru.algocode.exam2022.Utils.Stats;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;

@@ -1,4 +1,4 @@
-package ru.algocode.exam2022.Utils;
+package ru.algocode.exam2022.utils;
 
 import java.util.*;
 

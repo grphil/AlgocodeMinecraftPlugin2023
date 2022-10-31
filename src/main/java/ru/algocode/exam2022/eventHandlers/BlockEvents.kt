@@ -1,11 +1,11 @@
-package ru.algocode.exam2022.EventHandlers
+package ru.algocode.exam2022.eventHandlers
 
 import org.bukkit.Material
 import org.bukkit.block.Chest
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockPlaceEvent
-import ru.algocode.exam2022.APlugin
+import ru.algocode.exam2022.plugin
 
 class BlockEvents : Listener {
     @EventHandler
@@ -14,8 +14,8 @@ class BlockEvents : Listener {
         val player = event.player
         if (block.type == Material.CHEST && player.isOp) {
             val chestInventory = (block.state as Chest).blockInventory
-            APlugin.game!!.FillChest(chestInventory)
+            plugin.game.FillChest(chestInventory)
         }
-        APlugin.updatedChests!!.add(block.location)
+        plugin.updatedChests.add(block.location)
     }
 }
