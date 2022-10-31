@@ -3,7 +3,7 @@ jobs:
   BuildPlugin:
     runs-on: ubuntu-latest
     steps:
-      - uses: action/checkout@v3
+      - uses: actions/checkout@v3
       - run: gradle build
     
       - uses: actions/upload-artifact@v3
