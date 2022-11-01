@@ -15,7 +15,7 @@ class PlayerEvents : Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         val player = event.player
-        plugin.game.InitPlayer(player)
+        plugin.game.initPlayer(player)
         plugin.borderApi.bypass(player.name)
         event.joinMessage = player.displayName + ChatColor.RESET + " присоединился!"
         player.sendMessage(ChatColor.GOLD.toString() + "Добро пожаловать на наш сервер экзамена")
@@ -39,10 +39,10 @@ class PlayerEvents : Listener {
     @EventHandler
     fun onPlayerDeath(event: PlayerDeathEvent) {
         val killed = event.entity
-        plugin.game.Died(killed)
+        plugin.game.died(killed)
         val killer = killed.killer
         if (killer != null) {
-            plugin.game.Killed(killer)
+            plugin.game.killed(killer)
         }
     }
 
@@ -77,7 +77,7 @@ class PlayerEvents : Listener {
         }
         event.isCancelled = true
         val player = event.player
-        plugin.game.OpenMerchant(player)
+        plugin.game.openMerchant(player)
     }
 
     @EventHandler
@@ -98,6 +98,6 @@ class PlayerEvents : Listener {
         }
         val pages = event.newBookMeta.pages
         val code = pages.joinToString(separator = "\n")
-        plugin.game.SubmitProblem(player, title, code)
+        plugin.game.submitProblem(player, title, code)
     }
 }

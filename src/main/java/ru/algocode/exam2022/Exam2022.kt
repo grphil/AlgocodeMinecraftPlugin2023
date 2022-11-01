@@ -50,11 +50,11 @@ class Exam2022 : JavaPlugin(), Listener {
             EntityEvents(),
         )
         for (player in server.onlinePlayers) {
-            game.InitPlayer(player)
+            game.initPlayer(player)
         }
         object : BukkitRunnable() {
             override fun run() {
-                game.Tick()
+                game.tick()
             }
         }.runTaskTimer(this, 20, 20)
         spawnManager = SpawnManager(this)
@@ -86,7 +86,7 @@ class Exam2022 : JavaPlugin(), Listener {
     }
 
     fun reloadGameConfig() {
-        game.ReloadConfig()
+        game.reloadConfig()
     }
 
     fun getStatus(player: Player?) {

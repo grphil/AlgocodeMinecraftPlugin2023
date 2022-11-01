@@ -14,7 +14,7 @@ class BlockEvents : Listener {
         val player = event.player
         if (block.type == Material.CHEST && player.isOp) {
             val chestInventory = (block.state as Chest).blockInventory
-            plugin.game.FillChest(chestInventory)
+            plugin.game.fillChest(chestInventory)
         }
         plugin.updatedChests.add(block.location)
     }

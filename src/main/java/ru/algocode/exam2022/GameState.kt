@@ -25,21 +25,19 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
     val config: Config
     private val playersApi: SheetsAPI
     private val players: ConcurrentHashMap<String, Stats>
-    private val bossBars: ConcurrentHashMap<String, BossBar>
+    private val bossBars: ConcurrentHashMap<String, BossBar> = ConcurrentHashMap()
     private var playersCount: Int
     private val scoreboardObjective: Objective
     private var secondsCount: Int
-    var xmlParser: ExternalXmlParser
+    var xmlParser: ExternalXmlParser = ExternalXmlParser(plugin)
 
     init {
-        bossBars = ConcurrentHashMap()
-        xmlParser = ExternalXmlParser(plugin)
         playersCount = 1
         secondsCount = 0
         playersApi = SheetsAPI(plugin.config.getString("spreadsheet_id")!!, plugin)
         config = Config(plugin)
         players = ConcurrentHashMap()
-        ReloadConfig()
+        reloadConfig()
         try {
             xmlParser.UpdateStandings(config.externalXmlPath, players)
         } catch (e: Exception) {
@@ -59,7 +57,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         scoreboardObjective.displaySlot = DisplaySlot.SIDEBAR
     }
 
-    fun Tick() {
+    fun tick() {
         secondsCount++
         if (secondsCount % 60 == 0) {
             reloadPlayers()
@@ -75,12 +73,12 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         spawnItems()
     }
 
-    fun InitPlayer(player: Player) {
+    fun initPlayer(player: Player) {
         player.scoreboard = scoreboardObjective.scoreboard!!
         updatePlayerInfo(player)
     }
 
-    fun Died(player: Player) {
+    fun died(player: Player) {
         val name = player.name
         if (players.containsKey(name)) {
             players[name]!!.Died()
@@ -88,7 +86,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         updatePlayerInfo(player)
     }
 
-    fun Killed(player: Player) {
+    fun killed(player: Player) {
         val name = player.name
         if (players.containsKey(name)) {
             val playerStats = players[name]
@@ -102,7 +100,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         updatePlayerInfo(player)
     }
 
-    fun FillChest(inventory: Inventory) {
+    fun fillChest(inventory: Inventory) {
         for (item in config.chestItems!!) {
             if (item.Generated()) {
                 val itemStack = item.GenerateItem()
@@ -112,11 +110,11 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         }
     }
 
-    fun OpenMerchant(player: Player?) {
+    fun openMerchant(player: Player?) {
         config.merchantMenu!!.Open(player)
     }
 
-    fun BuyMerchant(event: InventoryClickEvent) {
+    fun buyMerchant(event: InventoryClickEvent) {
         val itemStack = config.merchantMenu!!.OnClick(event) ?: return
         val item = itemStack.GenerateItem()
         val meta = item.itemMeta
@@ -141,7 +139,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         }
     }
 
-    fun ReloadConfig() {
+    fun reloadConfig() {
         val newPlayersCount = config.ReloadConfig()
         for (row in playersApi["Gamestats!A" + (playersCount + 1) + ":M" + newPlayersCount]!!) {
             val player = Stats(row)
@@ -163,7 +161,7 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
         playersCount = newPlayersCount
     }
 
-    fun SubmitProblem(player: Player, label: String, code: String) {
+    fun submitProblem(player: Player, label: String, code: String) {
         val name = player.name
         if (players.containsKey(name)) {
             val playerStats = players[name]
@@ -239,9 +237,11 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
                         playerStats.TooLongInForbiddenZone(config.penaltyForForbiddenZone)
                         bossBars[name]!!.run {
                             color = BarColor.YELLOW
-                            setTitle("Запретная зона: штраф " +
-                                    "${config.penaltyForForbiddenZone}, " +
-                                    "$scoreBefore -> ${scoreBefore - config.penaltyForForbiddenZone}")
+                            setTitle(
+                                "Запретная зона: штраф " +
+                                        "${config.penaltyForForbiddenZone}, " +
+                                        "$scoreBefore -> ${scoreBefore - config.penaltyForForbiddenZone}"
+                            )
                         }
                     } else
                         bossBars[name]!!.run {
@@ -259,15 +259,40 @@ class GameState internal constructor(private val plugin: JavaPlugin) {
                         }
                 } else {
                     playerStats.InAllowedZone()
-                    if (bossBars[name]?.color in listOf(BarColor.RED, BarColor.YELLOW)) {
-                        bossBars[name]!!.run {
-                            color = BarColor.GREEN
-                            progress = 1.0
-                            setTitle("Вы покинули запретную зону")
-                        }
-                    } else {
+                    val regenSucc = "Время в запретной зоне восстановлено"
+                    if (playerStats.GetTimeInForbiddenZone() == 0 && bossBars[name]?.title == regenSucc) {
                         bossBars[name]?.removeAll()
                         bossBars.remove(name)
+                    } else if (bossBars[name] != null) {
+                        bossBars[name]!!.run {
+                            if (playerStats.GetTimeInForbiddenZone() > 0) {
+                                color = BarColor.GREEN
+                                progress = max(
+                                    1.0 -
+                                            playerStats.GetTimeInForbiddenZone()
+                                            / config.maxTimeInForbiddenZone.toDouble(),
+                                    0.0
+                                )
+                                val left = "Вы покинули запретную зону"
+                                val regen = "Восстановление:"
+
+                                setTitle(
+                                    if (title == left) {
+                                        regen
+                                    } else {
+                                        if (title == regen || title.isEmpty()) {
+                                            isVisible = false
+                                            ""
+                                        } else {
+                                            left
+                                        }
+                                    }
+                                )
+                            } else {
+                                isVisible = true
+                                setTitle(regenSucc)
+                            }
+                        }
                     }
                 }
                 updatePlayerInfo(player)

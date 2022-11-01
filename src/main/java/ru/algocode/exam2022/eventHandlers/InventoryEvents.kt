@@ -18,12 +18,12 @@ class InventoryEvents : Listener {
             }
             plugin.updatedChests.add(loc)
             e.inventory.clear()
-            plugin.game.FillChest(e.inventory)
+            plugin.game.fillChest(e.inventory)
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     fun onInventoryClick(event: InventoryClickEvent?) {
-        plugin.game.BuyMerchant(event!!)
+        plugin.game.buyMerchant(event!!)
     }
 }
