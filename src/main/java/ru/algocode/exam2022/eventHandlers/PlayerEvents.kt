@@ -1,3 +1,5 @@
+@file:Suppress("Deprecation")
+
 package ru.algocode.exam2022.eventHandlers
 
 import org.bukkit.ChatColor
@@ -8,8 +10,11 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.*
+import org.bukkit.permissions.Permission
+import org.bukkit.permissions.PermissionAttachment
 import org.bukkit.scheduler.BukkitRunnable
 import ru.algocode.exam2022.plugin
+import ru.algocode.exam2022.shufflePlayers
 
 class PlayerEvents : Listener {
     @EventHandler
@@ -17,6 +22,14 @@ class PlayerEvents : Listener {
         val player = event.player
         plugin.game.initPlayer(player)
         plugin.borderApi.bypass(player.name)
+        if (player.uniqueId !in plugin.perms) {
+            plugin.perms[player.uniqueId] = player.addAttachment(plugin)
+            plugin.perms[player.uniqueId]!!.run {
+                setPermission("chunkyborder.bypass.move", true)
+                setPermission("chunkyborder.bypass.place", true)
+            }
+        }
+        PermissionAttachment(plugin, player).setPermission(Permission("chunkyborder.bypass.move"), true)
         event.joinMessage = player.displayName + ChatColor.RESET + " присоединился!"
         player.sendMessage(ChatColor.GOLD.toString() + "Добро пожаловать на наш сервер экзамена")
         if (!player.hasPlayedBefore()) {
@@ -53,7 +66,11 @@ class PlayerEvents : Listener {
         }
         val player = event.player
         val item = event.item
-        if (item == null || item.type != Material.BLAZE_ROD) {
+        if (item?.type == Material.SNOWBALL && item.itemMeta.displayName == "SHUFFLE BALL") {
+            shufflePlayers(player.world)
+            return
+        }
+        if (item?.type != Material.BLAZE_ROD) {
             return
         }
         item.amount = item.amount - 1

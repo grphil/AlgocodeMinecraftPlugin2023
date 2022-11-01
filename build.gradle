@@ -20,8 +20,8 @@ version = '1.0'
 repositories {
     mavenCentral()
     maven {
-        name = 'spigotmc-repo'
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+        name = 'papermc'
+        url = 'https://repo.papermc.io/repository/maven-public/'
     }
     maven {
         name = 'sonatype'
@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.spigotmc:spigot-api:1.18.1-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT'
     implementation 'com.google.api-client:google-api-client:1.33.0'
     implementation 'com.google.oauth-client:google-oauth-client-jetty:1.32.1'
     implementation 'com.google.apis:google-api-services-sheets:v4-rev20210629-1.32.1'

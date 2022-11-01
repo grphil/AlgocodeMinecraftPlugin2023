@@ -16,3 +16,6 @@ commands:
   problemstatus:
     description: Получает статус по задачам
     usage: /problemstatus
+  shuffle:
+    description: Шаффлит всех простых игроков между собой
+    usage: /shuffle <id of world> (optional, 0 by default)

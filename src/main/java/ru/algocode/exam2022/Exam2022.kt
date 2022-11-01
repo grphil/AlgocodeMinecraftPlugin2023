@@ -4,17 +4,14 @@ import org.bukkit.Location
 import org.bukkit.command.CommandExecutor
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
+import org.bukkit.permissions.PermissionAttachment
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
-import ru.algocode.exam2022.commandExecutors.EjudgeStatusCommand
-import ru.algocode.exam2022.commandExecutors.ReloadConfigCommand
-import ru.algocode.exam2022.commandExecutors.ResetChestsCommand
-import ru.algocode.exam2022.commandExecutors.SpawnCommand
-import ru.algocode.exam2022.eventHandlers.BlockEvents
-import ru.algocode.exam2022.eventHandlers.EntityEvents
-import ru.algocode.exam2022.eventHandlers.InventoryEvents
-import ru.algocode.exam2022.eventHandlers.PlayerEvents
+import ru.algocode.exam2022.commandExecutors.*
+import ru.algocode.exam2022.eventHandlers.*
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.HashMap
 
 /**
  * Singleton object for plugin (я задолбался передавать plugin в каждую функцию).
@@ -26,6 +23,7 @@ class Exam2022 : JavaPlugin(), Listener {
     lateinit var spawnManager: SpawnManager
     lateinit var updatedChests: MutableSet<Location?>
     lateinit var borderApi: ChunkyBorderApi
+    val perms = HashMap<UUID, PermissionAttachment>()
     private fun initConfig() {
         config.run {
             getString("spreadsheet_id")!!
@@ -48,6 +46,7 @@ class Exam2022 : JavaPlugin(), Listener {
             BlockEvents(),
             InventoryEvents(),
             EntityEvents(),
+            AnvilEvents(),
         )
         for (player in server.onlinePlayers) {
             game.initPlayer(player)
@@ -65,6 +64,7 @@ class Exam2022 : JavaPlugin(), Listener {
             "resetchests" to ResetChestsCommand(this),
             "syncconfig" to ReloadConfigCommand(this),
             "problemstatus" to EjudgeStatusCommand(this),
+            "shuffle" to ShuffleCommand(),
         )
         registerCommands()
     }
