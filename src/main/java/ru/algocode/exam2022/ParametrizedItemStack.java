@@ -1,16 +1,14 @@
 package ru.algocode.exam2022;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import ru.algocode.exam2022.utils.Utils;
 
-class ParametrizedItemStack {
+public class ParametrizedItemStack {
     private ItemStack item;
 
-    private int param;
+    private final int param;
 
-    private int maxCount;
+    private final int maxCount;
 
     ParametrizedItemStack(ItemStack item, int param, int maxCount) {
         this.item = item;

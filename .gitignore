@@ -102,6 +102,7 @@ $RECYCLE.BIN/
 
 .gradle
 build/
+server/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -118,3 +119,5 @@ run/
 !gradle-wrapper.jar
 
 src/main/resources/google_service_account.json
+
+.env

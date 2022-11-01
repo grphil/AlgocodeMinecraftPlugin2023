@@ -2,6 +2,7 @@ name: Exam2022
 version: 1.0
 main: ru.algocode.exam2022.Exam2022
 api-version: 1.18
+depend: [ChunkyBorder]
 commands:
   addspawn:
     description: Добавляет спаун
@@ -15,3 +16,6 @@ commands:
   problemstatus:
     description: Получает статус по задачам
     usage: /problemstatus
+  shuffle:
+    description: Шаффлит всех простых игроков между собой
+    usage: /shuffle <id of world> (optional, 0 by default)
